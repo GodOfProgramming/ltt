@@ -1,0 +1,6 @@
+*.out
+*.o
+*.so
+*/.metadata/*
+*/.recommenders/*
+*/out/*
