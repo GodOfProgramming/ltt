@@ -1,0 +1,1 @@
+/bin/bash -lc 'source /home/jdizzle/.env && cd /home/jdizzle/programming/buildpay/buildpay_api && bin/rake buildpay:refresh_ach_oauth_tokens && echo "Success" > /tmp/cron_success.txt' > /tmp/apicron.log 2>&1

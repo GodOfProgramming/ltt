@@ -1,0 +1,12 @@
+[
+  {
+    "first_name": {
+      "order": "asc"
+    }
+  },
+  {
+    "last_name": {
+      "order": "asc"
+    }
+  }
+]

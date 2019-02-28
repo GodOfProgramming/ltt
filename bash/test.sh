@@ -1,3 +1,5 @@
 #!/bin/bash
 
-echo "$TEST"
+echo "Did this work?"
+exec /bin/bash << 'EOT'
+	echo "Yes"
