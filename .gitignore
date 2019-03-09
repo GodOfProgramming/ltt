@@ -1,7 +1,12 @@
+*
+!/**/
+!*.*
+
 *.out
 *.o
 *.so
 *.class
+*.swp
 */.metadata/*
 */.recommenders/*
 */out/*
