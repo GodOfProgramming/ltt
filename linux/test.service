@@ -1,0 +1,20 @@
+[Unit]
+Description=test service
+After=network.target
+
+[Service]
+Type=simple
+
+Environment='RAILS_ENV=production'
+
+ExecStart=/bin/bash -lc "source $HOME/workspace/raw/linux/test.sh && \
+echo $TEST_VAR > /tmp/test.txt && \
+cd $HOME/workspace/raw/linux && \
+source out.sh"
+
+User=jdizzle
+Group=jdizzle
+UMask=0002
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=cleans the /tmp dir if not done soon enough
+After=network.target
+
+[Service]
+Type=simple
+
+ExecStart=/bin/rm -rf /tmp/startup.lock
+
+User=root
+Group=root
+
+[Install]
+WantedBy=multi-user.target

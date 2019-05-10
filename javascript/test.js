@@ -1,15 +1,7 @@
-var arr = [
-  1,
-  2
-];
+var foo = function() {
+  console.log(bar);
+};
 
-var func = function(n, i) {
-  arr[i] = i;
-}
+bar = 'hello';
 
-console.log(arr);
-
-arr.forEach(func);
-
-console.log(arr);
-
+foo();
