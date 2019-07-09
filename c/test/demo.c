@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-int main(void)
+int main(void) 
 {
   struct {
     .len = 10
