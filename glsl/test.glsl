@@ -1,4 +1,14 @@
+#iChannel0 "file://./glsl/thing.png"
+
+vec4 swirly_color();
+
 void main() {
+  vec4 tex = texture(iChannel0, gl_FragCoord.xy / iResolution.xy);
+  vec4 color = swirly_color();
+  gl_FragColor = color + tex;
+}
+
+vec4 swirly_color() {
   float time = iTime * 1.0;
   vec2 uv = (gl_FragCoord.xy / iResolution.xx - 0.5) * 8.0 * iMouse.xy * .03;
   vec2 uv0 = uv;
@@ -20,5 +30,6 @@ void main() {
   float r = sin(uv.x - time) * 0.5 + 0.5;
   float b = sin(uv.y + time) * 0.5 + 0.5;
   float g = sin((uv.x + uv.y + sin(time * 0.5)) * 0.5) * 0.5 + 0.5;
-  gl_FragColor = vec4(r, g, b, 1.0);
+
+  return vec4(r, g, b, 1) * 0.55;
 }
