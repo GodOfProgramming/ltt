@@ -1,17 +1,37 @@
+#!/bin/ruby
+
+class Fixnum
+  N_BYTES = [42].pack('i').size
+  N_BITS = N_BYTES * 8
+  MAX = 2 ** (N_BITS - 2) - 1
+  MIN = -MAX - 1
+end
+
 if ARGV.length == 0 
-  puts 'need end number'
+  puts 'need number of primes'
   exit
 end
 
-start = 1
-stop = ARGV[0].to_i
+num_primes = ARGV[1]
+range_begin = ENV['prime_start']
+range_end = ENV['prime_end']
 
-for i in start..stop
+start = range_begin ? range_begin.to_i : 1
+stop = range_end ? range_end.to_i : Fixnum::MAX
+
+i = start
+count = 0
+while i < stop && count < num_primes do
   half = i / 2
-  prime = true 
+
   for j in 2..half
-    prime = false if i % j == 0
+    if i % j == 0
+      puts i
+      count += 1 
+      break
+    end
   end
-  puts i if prime
+
+  i++
 end
 

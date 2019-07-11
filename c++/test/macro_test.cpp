@@ -1,9 +1,12 @@
 #include <iostream>
 
-#define foo(a) auto a = "foo"
+#define BeginTest(TestName) const auto TestName = []() -> int {
+#define EndTest() return 0; }
+
+BeginTest(foo);
+EndTest();
 
 int main() {
-  foo(foo);
   std::cout << foo << std::endl;
   return 0;
 }
