@@ -1,4 +1,4 @@
-function func() {
+function init() {
   function authToken() {
     return JSON.parse(localStorage.getItem("ls.authToken"));
   }
@@ -48,15 +48,12 @@ function func() {
       console.log('Failure'); 
       console.log(resp);
     };
-    var onComplete = function(resp) { 
-      console.log(localStorage); 
-    };
-    send(method, url, params, onSuccess, onFailure, onComplete);
+    send(method, url, params, onSuccess, onFailure);
   };
 }
 
 var script = document.createElement('script');
-var code = document.createTextNode(`(${func})();`);
+var code = document.createTextNode(`(${init})();`);
 script.appendChild(code);
 (document.body || document.head || document.documentElement).appendChild(script);
 
