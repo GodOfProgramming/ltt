@@ -29,7 +29,10 @@ function init() {
     };
   }
 
-  chrome.switchCreds = function(email) {
+  chrome.buildpay = new Object();
+  var buildpay = chrome.buildpay;
+
+  buildpay.switchCreds = function(email) {
     var method = 'POST';
     var url = 'http://localhost:51034/switch_credentials';
     var params = { email: email };
