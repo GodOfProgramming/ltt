@@ -1,30 +1,3 @@
-class RouteRecognizer
-  attr_reader :paths
-
-  # To use this inside your app, call:
-  # `RouteRecognizer.new.initial_path_segments`
-  # This returns an array, e.g.: ['assets','blog','team','faq','users']
-
-  INITIAL_SEGMENT_REGEX = %r{^\/([^\/\(:]+)}
-
-  def initialize
-    routes = Rails.application.routes.routes
-    @paths = routes.collect {|r| r.path.spec.to_s }
-  end
-
-  def initial_path_segments
-    @initial_path_segments ||= begin
-      paths.collect {|path| match_initial_path_segment(path)}.compact.uniq
-    end
-  end
-
-  def match_initial_path_segment(path)
-    if match = INITIAL_SEGMENT_REGEX.match(path)
-      match[1]
-    end
-  end
-end
-
 class Generator
   def seed
     ActiveRecord::Base.transaction do
@@ -88,8 +61,7 @@ class Generator
 	funder_organization_office: foo,
 	funder_organization_office_member: foom,
 	owner_user: o,
-	payment_type: 'manual',
-	started_at: DateTime.now
+	payment_type: 'manual'
       )
 
       free_project = helper.new_project(
@@ -164,6 +136,8 @@ class Generator
 	user: w2,
 	parent: p2sp1
       )
+
+      ProjectStarter.new(manual_project).start
     end
   end
 
