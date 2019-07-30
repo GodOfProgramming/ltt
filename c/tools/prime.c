@@ -3,8 +3,8 @@
 #include <limits.h>
 
 int main(int argc, char* argv[]) {
-  if (!argc) {
-    printf("need number of primes\n");
+  if (argc == 1) {
+    printf("Usage ?prime_start=? ?prime_end=? prime [num_primes]\n");
     return 0;
   }
 
