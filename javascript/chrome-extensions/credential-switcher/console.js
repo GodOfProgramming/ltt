@@ -53,6 +53,10 @@ function init() {
     };
     send(method, url, params, onSuccess, onFailure);
   };
+
+  buildpay.whoami = function() {
+    console.log(JSON.parse(localStorage.getItem('ls.currentUser')).email);
+  };
 }
 
 var script = document.createElement('script');

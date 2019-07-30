@@ -1,9 +1,12 @@
-#iChannel0 "file://./glsl/thing.png"
+#iChannel0 "file://./thing.png"
 
 vec4 swirly_color();
 
 void main() {
-  vec4 tex = texture(iChannel0, gl_FragCoord.xy / iResolution.xy);
+  vec2 begin = gl_FragCoord.xy / iResolution.xy;
+  int time = int(iGlobalTime);
+  vec2 end = gl_FragCoord.yx;
+  vec4 tex = vec4(begin * end * 0.01, 0, 0);
   vec4 color = swirly_color();
   gl_FragColor = color + tex;
 }

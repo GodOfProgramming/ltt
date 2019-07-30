@@ -137,6 +137,47 @@ class Generator
 	parent: p2sp1
       )
 
+      m = helper.new_merchant(
+	name: 'Merchant',
+	merchant_id: '0x01',
+	street1: 'Street',
+	city: 'City',
+	state: 'NY',
+	postal_code: '12184',
+	primary_phone: '9999999999'
+      )
+
+      ml = helper.new_merchant_location(
+	merchant: m,
+	name: 'Location',
+	store_number: '0x01',
+	street1: 'Street',
+	city: 'City',
+	state: 'NY',
+	postal_code: '12184',
+	primary_phone: '9999999999'
+      )
+
+      mlmu = helper.new_user(
+	first_name: 'Merchant1',
+	last_name: 'Level1',
+	email: 'm1-l1@a.com',
+	home_mobile_phone: '9999999999',
+	company_name: 'Merchant Co',
+	home_street1: 'Street',
+	home_city: 'City',
+	home_state: 'NY',
+	home_postal_code: '12184',
+	password: ' ',
+	registered_at: 3.days.ago
+      )
+
+      mlm = helper.new_merchant_location_member(
+	merchant_location: ml,
+	user: mlmu,
+	can_manage_bank_accounts: true
+      )
+
       ProjectStarter.new(manual_project).start
     end
   end

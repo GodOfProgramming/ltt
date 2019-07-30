@@ -1,7 +1,9 @@
-var foo = function() {
-  console.log(bar);
-};
+function foo() {
+  console.log('foo');
+}
 
-bar = 'hello';
+function bar() {
+  foo();
+}
 
-foo();
+bar();
