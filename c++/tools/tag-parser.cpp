@@ -8,7 +8,6 @@
 #include <unordered_map>
 
 typedef std::vector<std::string> string_vec;
-typedef std::unordered_map<std::string, Tag> TagMap;
 typedef std::unordered_map<std::string, std::string> AttributeMap;
 
 void fill_vector(string_vec& vec, int count);
@@ -16,7 +15,6 @@ void fill_vector(string_vec& vec, int count);
 class Tag {
   public:
     Tag() = default;
-    Tag(std::string name) : mName(name) { }
 
     Tag& operator[](const std::string& key) {
       return children[key];
@@ -26,12 +24,11 @@ class Tag {
       return attributes[key];
     }
 
-    TagMap children;
+    std::unordered_map<std::string, Tag> children;
     AttributeMap attributes;
-
-  private:
-    std::string mName;
 };
+
+typedef std::unordered_map<std::string, Tag> TagMap;
 
 struct TagData  {
   std::string tag_name;
@@ -46,25 +43,29 @@ class TagParser {
   public:
     TagParser() = default;
 
-    TagMap getTags(const std::string& src) {
+    Tag getTags(const std::string& src) {
+      Tag root;
       TagMap roots;
       TagData tag_data;
 
       do {
-	tag_data = get_tag_data(working_string, tag_data.next_pos);
+	tag_data = get_tag_data(src, tag_data.next_pos);
 
 	std::string body = src.substr(tag_data.close_start_tag_indx + 1, tag_data.open_end_tag_indx);
 
-	Tag current(tag_data.tag_name);
+	Tag current;
 
 	if (body.length()) {
-	  current.children = std::move(getTags(tag_body));
+	  Tag inner = getTags(body);
+	  current.children = std::move(inner.children);
 	}
 
 	roots[tag_data.tag_name] = current;
       } while(tag_data.next_pos != std::string::npos);
 
-      return roots;
+      root.children = std::move(roots);
+
+      return root;
     }
 
   private:
@@ -88,61 +89,59 @@ class TagParser {
     }
 };
 
-struct QueryCommmand {
-  bool next_is_child_access = false;
-  bool next_is_attr_access = false;
+struct QueryCommand {
+  bool is_child_access = false;
+  bool is_attr_access = false;
   
-  std::string current_member_name;
+  std::string member_name;
 };
 
 class QueryRunner {
   public:
-    QueryRunner(const TagMap& data) : mData(data) { }
+    QueryRunner(const Tag& root) : mRootTag(root) { }
 
     void runQueries(std::vector<std::string>& cmds) {
       for (auto& cmd : cmds) {
 	std::vector<QueryCommand> queries = parseCommand(cmd);
-	runQuery(queries, 0);
+	Tag start = mRootTag;
+	for(auto& query : queries) {
+	  if (query.is_child_access) {
+	    start = start[query.member_name];
+	  } else if (query.is_attr_access) {
+	    std::cout << start(query.member_name) << '\n';
+	  }
+	}
       }
     }
 
   private:
-    const TagMap& mData;
-
-    void runQuery(const std::vector<QueryCommand>& cmds, size_t indx, bool is_child_access, bool is_attr_access) {
-      if (indx < cmds.size()) {
-	QueryCommand cmd = cmds[indx];
-	if (is_child_access) {
-
-	} else if (is_attr_access) {
-
-	}
-	runQuery(cmds, indx + 1, cmd.is_child_access, cmd.is_attr_access);
-      }
-    }
+    const Tag& mRootTag;
 
     std::vector<QueryCommand> parseCommand(const std::string& line) {
       std::vector<QueryCommand> retval;
 
-      size_t next_pos = 0;
-      do {
+      std::vector<size_t> dot_locations;
+      size_t next_pos = line.find(".", next_pos);
+      while (next_pos != std::string::npos) {
+	dot_locations.push_back(next_pos);
+	next_pos = line.find(".", next_pos);
+      }
+
+      size_t last_dot_location = 0;
+      for (auto loc : dot_locations) {
 	QueryCommand cmd;
-
-	size_t tmp = line.find(".", next_pos);
-	if (tmp != std::string::npos) {
-	  cmd.next_is_child_access = true;
-	} else {
-	  tmp = line.find("~", next_pos);
-	  if (tmp != std::string::npos) {
-	    cmd.next_is_attr_access = true;
-	  }
-	}
-
-	cmd.current_member_name = line.substr(next_pos, tmp);
-	next_pos = tmp + 1;
-
+	cmd.is_child_access = true;
+	cmd.member_name = line.substr(last_dot_location, loc);
+	last_dot_location = loc;
 	retval.push_back(cmd);
-      } while (next_pos != std::string::npos);
+      }
+
+      QueryCommand cmd;
+      size_t attr_access = line.find("~", last_dot_location);
+
+      cmd.is_attr_access = true;
+      cmd.member_name = line.substr(attr_access);
+      retval.push_back(cmd);
 
       return retval;
     }
@@ -163,17 +162,17 @@ int main(int argc, char* argv[]) {
   std::vector<std::string> queries;
   fill_vector(queries, query_line_count);
 
-  std::string_stream ss;
+  std::stringstream ss;
   for (const auto& line : src_code) {
     ss << line;
   }
 
   TagParser parser;
 
-  TagMap tags = parser.getTags(ss.str());
+  Tag root = parser.getTags(ss.str());
 
-  QueryRunner runner;
-  runner.runQueries(
+  QueryRunner runner(root);
+  runner.runQueries();
   return 0;
 }
 
