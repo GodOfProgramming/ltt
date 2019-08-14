@@ -6,6 +6,8 @@
 #define MAX(a, b) ((a < b) ? b : a)
 #define MIN(a, b) ((a > b) ? b : a)
 
+int foo = 6;
+
 int ul(int row, int col, int n, int dist) {
    return abs(n - MIN(row, col));
 }

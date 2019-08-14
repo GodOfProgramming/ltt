@@ -67,7 +67,8 @@ class Generator
       free_project = helper.new_project(
 	name: 'Project1',
 	project_number: '0x02',
-	street1: 'Street',
+	street1: 'Important street',
+	street2: 'Less important street',
 	city: 'City',
 	state: 'NY',
 	postal_code: '12184',

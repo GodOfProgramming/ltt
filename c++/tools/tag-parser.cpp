@@ -6,29 +6,39 @@
 #include <string>
 #include <sstream>
 #include <unordered_map>
+#include <memory>
+
+class Tag;
 
 typedef std::vector<std::string> string_vec;
 typedef std::unordered_map<std::string, std::string> AttributeMap;
+typedef std::unordered_map<std::string, std::shared_ptr<Tag>> TagMap;
 
 void fill_vector(string_vec& vec, int count);
 
 class Tag {
   public:
     Tag() = default;
+    Tag(Tag& other) {
+      *this = other;
+    }
+
+    Tag& operator=(const Tag& other) {
+      this->children = std::move(other.children);
+      this->attributes = std::move(other.attributes);
+    }
 
     Tag& operator[](const std::string& key) {
-      return children[key];
+      return *children[key];
     }
 
     std::string& operator()(const std::string& key) {
       return attributes[key];
     }
 
-    std::unordered_map<std::string, Tag> children;
+    TagMap children;
     AttributeMap attributes;
 };
-
-typedef std::unordered_map<std::string, Tag> TagMap;
 
 struct TagData  {
   std::string tag_name;
@@ -56,11 +66,11 @@ class TagParser {
 	Tag current;
 
 	if (body.length()) {
-	  Tag inner = getTags(body);
+	  Tag inner(getTags(body));
 	  current.children = std::move(inner.children);
 	}
 
-	roots[tag_data.tag_name] = current;
+	roots[tag_data.tag_name] = std::make_shared(current);
       } while(tag_data.next_pos != std::string::npos);
 
       root.children = std::move(roots);
