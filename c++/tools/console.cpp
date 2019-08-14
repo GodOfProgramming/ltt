@@ -9,13 +9,15 @@
 #define CODE_CYAN	"\x1b[36m"
 #define CODE_WHITE	"\x1b[37m"
 
+Console console;
+
 const char* Console::setColor(Console::Color c) {
   switch(c) {
     case Console::Color::Black:   return CODE_BLACK;
     case Console::Color::Red:     return CODE_RED;
     case Console::Color::Green:   return CODE_GREEN;
-    case Console::Color::Yellow   return CODE_YELLOW;
-    case Console::Color::Blue     return CODE_BLUE;
+    case Console::Color::Yellow:  return CODE_YELLOW;
+    case Console::Color::Blue:    return CODE_BLUE;
     case Console::Color::Magenta: return CODE_MAGENTA;
     case Console::Color::Cyan:    return CODE_CYAN;
     case Console::Color::White:   return CODE_WHITE;

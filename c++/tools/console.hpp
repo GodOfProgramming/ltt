@@ -20,6 +20,9 @@ class Console {
     template<typename... Args>
     void write(Args&&... args) {
       ((std::cout << std::forward<Args>(args)), ...);
+      std::cout << "\x1b[m" << '\n';
     }
 };
+
+extern Console console;
 
