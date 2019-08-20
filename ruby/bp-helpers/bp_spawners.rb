@@ -183,9 +183,43 @@ class Generator
     end
   end
 
+  def make_psp(project, id, parent: nil)
+    helper.new_project_provider(
+      project: project,
+      parent: parent,
+      user: helper.new_user(
+	first_name: "Worker#{id}",
+	last_name: "Level#{level_id(parent)}",
+	email: "w#{id}-l#{level_id(parent)}-p#{project.id}@a.com",
+	home_mobile_phone: '9999999999',
+	company_name: "Worker-#{id}-#{level_id(parent)}-#{project.id} Co",
+	home_street1: 'Street1',
+	home_street2: 'Street2',
+	home_city: 'City',
+	home_state: 'NY',
+	home_postal_code: '12184',
+	password: ' ',
+	registered_at: 3.days.ago
+      )
+    )
+  end
+
+  def make_children(project, parent_project_service_provider, num)
+    num.times do |x|
+      make_psp(project, x, parent: parent_project_service_provider)
+    end
+  end
+
   private
 
   def helper
     @helper ||= BuildpayTestHelper.new
   end
+
+  def level_id(parent)
+    parent.present? ? parent.id : '0'
+  end
 end
+
+$G = Generator.new
+

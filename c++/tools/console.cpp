@@ -35,7 +35,7 @@
 Console console;
 
 namespace consolemod {
-  template <> struct tostr<ForgroundColor::Black> { static const char* const value };
+  template <> struct tostr<ForgroundColor::Black> { static const char* const value; };
     const char* const tostr<ForgroundColor::Black>::value = CODE_FORGROUND_BLACK;
 }
 
