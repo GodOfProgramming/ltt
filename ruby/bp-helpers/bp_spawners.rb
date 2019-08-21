@@ -15,8 +15,6 @@ class Generator
 	registered_at: 1.day.ago
       )
 
-      helper.new_invite(user: f, created_by_user: User.second, email: f.email)
-
       o = helper.new_user(
 	first_name: 'Owner',
 	last_name: 'User',
@@ -31,8 +29,6 @@ class Generator
 	registered_at: 2.days.ago
       )
 
-      helper.new_invite(user: o, created_by_user: f, email: o.email)
-
       fo = helper.new_funder_organization(name: 'Funder0')
       foo = helper.new_funder_organization_office(
 	funder_organization: fo
@@ -45,10 +41,11 @@ class Generator
 
       foo.update(primary_contact_user: f)
 
-      manual_project = helper.new_project(
-	name: 'Project0',
+      proj_params = {
+	name: 'Manual Project',
 	project_number: '0x01',
-	street1: 'Street',
+	street1: 'First Street',
+	street2: 'Second Street',
 	city: 'City',
 	state: 'NY',
 	postal_code: '12184',
@@ -62,81 +59,31 @@ class Generator
 	funder_organization_office_member: foom,
 	owner_user: o,
 	payment_type: 'manual'
-      )
+      }
 
-      free_project = helper.new_project(
-	name: 'Project1',
-	project_number: '0x02',
-	street1: 'Important street',
-	street2: 'Less important street',
-	city: 'City',
-	state: 'NY',
-	postal_code: '12184',
-	material_funds: 100_000_000,
-	labor_funds: 100_000_000,
-	overhead_funds: 100_000_000,
-	profit_funds: 100_000_000,
-	funder_user: f,
-	funder_organization: fo,
-	funder_organization_office: foo,
-	funder_organization_office_member: foom,
-	owner_user: o,
-	payment_type: nil,
-      )
+      manual_project = helper.new_project(proj_params)
 
-      w1 = helper.new_user(
-	first_name: 'Worker1',
-	last_name: 'Level1',
-	email: 'w1-l1@a.com',
-	home_mobile_phone: '9999999999',
-	company_name: 'Worker Co',
-	home_street1: 'Street',
-	home_city: 'City',
-	home_state: 'NY',
-	home_postal_code: '12184',
-	password: ' ',
-	registered_at: 3.days.ago
-      )
+      proj_params[:name] = 'Funded Manual Project'
+      proj_params[:project_number] = '0x02'
 
-      helper.new_invite(user: w1, created_by_user: o, email: w1.email)
+      funded_manual_project = helper.new_project(proj_params)
 
-      w2 = helper.new_user(
-	first_name: 'Worker1',
-	last_name: 'Level2',
-	email: 'w1-l2@a.com',
-	home_mobile_phone: '9999999999',
-	company_name: 'Worker Co',
-	home_street1: 'Street',
-	home_city: 'City',
-	home_state: 'NY',
-	home_postal_code: '12184',
-	password: ' ',
-	registered_at: 3.days.ago
-      )
+      proj_params[:name] = 'Unused Project'
+      proj_params[:project_number] = '0x03'
+      proj_params[:street1] = 'Important Street'
+      proj_params[:street2] = 'Less Important Street'
+      proj_params[:payment_type] = nil
 
-      helper.new_invite(user: w2, created_by_user: w1, email: w2.email)
+      free_project = helper.new_project(proj_params)
 
-      p1sp1 = helper.new_project_provider(
-	project: manual_project,
-	user: w1
-      )
+      p1rsp = make_psp(manual_project, 0)
+      make_children(manual_project, p1rsp, 10)
 
-      p1sp2 = helper.new_project_provider(
-	project: manual_project,
-	user: w2,
-	parent: p1sp1
-      )
+      p2rsp = make_psp(funded_manual_project, 0)
+      make_children(funded_manual_project, p2rsp, 10)
 
-      p2sp1 = helper.new_project_provider(
-	project: free_project,
-	user: w1
-      )
-
-      p2sp2 = helper.new_project_provider(
-	project: free_project,
-	user: w2,
-	parent: p2sp1
-      )
+      p3rsp = make_psp(free_project, 0)
+      make_children(free_project, p3rsp, 10)
 
       m = helper.new_merchant(
 	name: 'Merchant',
@@ -180,7 +127,14 @@ class Generator
       )
 
       ProjectStarter.new(manual_project).start
+      ProjectStarter.new(funded_manual_project).start
+
+      seed_funds(pm_from_psp(p2rsp), multiplier: 100_000, approve_labor: true, approve_material: true)
+      p2rsp.children.each do |child|
+	seed_funds(pm_from_psp(child), multiplier: 100, approve_labor: true, approve_material: true)
+      end
     end
+    nil
   end
 
   def make_psp(project, id, parent: nil)
@@ -204,13 +158,57 @@ class Generator
     )
   end
 
+  def seed_funds(project_member, multiplier: 1, approve_labor: false, approve_material: false)
+    to = project_member.user
+    from = project_member.parent_user
+    project = project_member.project
+
+    labor = helper.new_labor_commitment(
+      project: project,
+      from_user: from,
+      to_user: to,
+
+      labor_amount: 1 * multiplier,
+      overhead_amount: 1 * multiplier,
+      profit_amount: 1 * multiplier,
+      amount: 3 * multiplier
+    )
+
+    if approve_labor
+      labor.acknowledge!
+    else
+      CommittedLaborFundsNotificationCreator.new(labor).create
+    end
+
+    material = helper.new_material_commitment(
+      project: project,
+      from_user: from,
+      to_user: to,
+
+      amount: 1 * multiplier
+    )
+
+    if approve_material
+      material.acknowledge!
+    else
+      CommittedMaterialFundsNotificationCreator.new(material).create
+    end
+  end
+
   def make_children(project, parent_project_service_provider, num)
     num.times do |x|
       make_psp(project, x, parent: parent_project_service_provider)
     end
   end
 
-  private
+  def create_invoices_for(*project_service_providers, parent: nil)
+    project_service_providers.each do |psp|
+      project = psp.project
+      user = psp.user
+      invoice = helper.new_invoice(project: project, user: user, parent: parent)
+      helper.new_payout(invoice: invoice)
+    end
+  end
 
   def helper
     @helper ||= BuildpayTestHelper.new
@@ -218,6 +216,14 @@ class Generator
 
   def level_id(parent)
     parent.present? ? parent.id : '0'
+  end
+
+  def pm(project, user)
+    ProjectMembers::Provider.build(project, user)
+  end
+
+  def pm_from_psp(psp) 
+    ProjectMembers::Provider.build(psp.project, psp.user)
   end
 end
 
