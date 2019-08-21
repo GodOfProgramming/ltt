@@ -13,5 +13,5 @@ tag-parser:
 	g++ -o tag-parser tag-parser.cpp
 
 console-test:
-	g++ console-test.cpp -o console-test -std=c++17 libconsole.a
+	g++ console-test.cpp libconsole.a -o console-test -std=c++17
 

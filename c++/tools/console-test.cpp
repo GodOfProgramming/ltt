@@ -2,10 +2,10 @@
 
 int main() {
   console.write(
+    console.setOpt<Console::Mod::FG_Cyan>(),
     "foo", 
-    console.setOpt(Console::ForgroundColor::Black),
-    console.setOpt(Console::BackgroundColor::White),
-    console.setOpt(Console::Attrs::SlowBlink),
+    console.setOpt<Console::Mod::FG_Black>(),
+    console.setOpt<Console::Mod::BG_White>(),
     "bar"
   );
   return 0;
