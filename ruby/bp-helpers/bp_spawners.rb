@@ -85,31 +85,30 @@ class Generator
       p3rsp = make_psp(free_project, 0)
       make_children(free_project, p3rsp, 10)
 
-      m = helper.new_merchant(
+      m_params = {
 	name: 'Merchant',
-	merchant_id: '0x01',
+	merchant_id: '0x00',
 	street1: 'Street',
 	city: 'City',
 	state: 'NY',
 	postal_code: '12184',
 	primary_phone: '9999999999'
-      )
+      }
 
-      ml = helper.new_merchant_location(
-	merchant: m,
+      ml_params = {
 	name: 'Location',
-	store_number: '0x01',
+	store_number: '0x00',
 	street1: 'Street',
 	city: 'City',
 	state: 'NY',
 	postal_code: '12184',
 	primary_phone: '9999999999'
-      )
+      }
 
-      mlmu = helper.new_user(
-	first_name: 'Merchant1',
-	last_name: 'Level1',
-	email: 'm1-l1@a.com',
+      mlmu_params {
+	first_name: 'Merchant0',
+	last_name: 'Level0',
+	email: 'm0-l0@a.com',
 	home_mobile_phone: '9999999999',
 	company_name: 'Merchant Co',
 	home_street1: 'Street',
@@ -118,13 +117,42 @@ class Generator
 	home_postal_code: '12184',
 	password: ' ',
 	registered_at: 3.days.ago
-      )
+      }
 
-      mlm = helper.new_merchant_location_member(
-	merchant_location: ml,
-	user: mlmu,
-	can_manage_bank_accounts: true
-      )
+      setup_merchant(m_params, ml_params, mlmu_params)
+
+      m_params[:name] = 'Merchant1'
+      m_params[:merchant_id] = '0x01'
+
+      ml_params[:name] = 'Location1'
+      ml_params[:store_number] = '0x01'
+
+      mlmu_params[:first_name] = 'Merchant1'
+      mlmu_params[:email] = 'm1-l0@a.com'
+
+      setup_merchant(m_params, ml_params, mlmu_params)
+
+      m_params[:name] = 'Merchant2'
+      m_params[:merchant_id] = '0x02'
+
+      ml_params[:name] = 'Location2'
+      ml_params[:store_number] = '0x02'
+
+      mlmu_params[:first_name] = 'Merchant2'
+      mlmu_params[:email] = 'm2-l0@a.com'
+
+      setup_merchant(m_params, ml_params, mlmu_params)
+
+      m_params[:name] = 'Merchant3'
+      m_params[:merchant_id] = '0x03'
+
+      ml_params[:name] = 'Location3'
+      ml_params[:store_number] = '0x03'
+
+      mlmu_params[:first_name] = 'Merchant3'
+      mlmu_params[:email] = 'm3-l0@a.com'
+
+      setup_merchant(m_params, ml_params, mlmu_params)
 
       ProjectStarter.new(manual_project).start
       ProjectStarter.new(funded_manual_project).start
@@ -224,6 +252,22 @@ class Generator
 
   def pm_from_psp(psp) 
     ProjectMembers::Provider.build(psp.project, psp.user)
+  end
+
+  def setup_merchant(m_params, ml_params, mlu_params)
+    m = helper.new_merchant(m_params)
+
+    ml_params[:merchant] = m,
+
+    ml = helper.new_merchant_location(merchant_location_params)
+
+    mlmu = helper.new_user(mlmu_params)
+
+    helper.new_merchant_location_member(
+      merchant_location: ml,
+      user: mlmu,
+      can_manage_bank_accounts: true
+    )
   end
 end
 
