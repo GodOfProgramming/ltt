@@ -1,4 +1,4 @@
-#!/bin/ruby
+#!/usr/bin/ruby
 
 if ARGV.length == 0
   puts "Usage: pascal-to-snake.rb [files...]"
@@ -7,7 +7,14 @@ end
 
 require 'rails'
 
-ARGV.each do |fn|
-  File.rename(File.new(fn), fn.underscore) if File.file?(fn)
+cur_dir = Dir.pwd
+
+ARGV.each do |arg|
+    orig = "#{cur_dir}/#{arg}"
+    new = "#{cur_dir}/#{arg.underscore}"
+    if File.file?(orig)
+	puts "renaming #{orig} -> #{new}"
+	File.rename(orig, new)
+    end
 end
 

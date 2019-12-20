@@ -11,8 +11,10 @@ cur_dir = Dir.pwd
 
 ARGV.each do |arg|
     orig = "#{cur_dir}/#{arg}"
-    new = "#{cur_dir}/#{File.basename(arg, File.extname(arg)).camelize}#{File.extname(arg)}"
-    puts "renaming #{orig} -> #{new}"
-    File.rename(orig, new)
+    new = "#{cur_dir}/#{arg.camelize}"
+    if File.file?(orig)
+	puts "renaming #{orig} -> #{new}"
+	File.rename(orig, new)
+    end
 end
 
