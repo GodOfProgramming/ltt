@@ -36,7 +36,7 @@ class Generator
       foom = helper.new_funder_organization_office_member(
 	funder_organization_office: foo, 
 	user: f,
-	can_manage_bank_accounts: true
+	can_manage_financial_accounts: true
       )
 
       foo.update(primary_contact_user: f)
@@ -218,7 +218,7 @@ class Generator
     helper.new_merchant_location_member(
       merchant_location: ml,
       user: mlmu,
-      can_manage_bank_accounts: true
+      can_manage_financial_accounts: true
     )
   end
 
