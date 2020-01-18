@@ -11,6 +11,7 @@
 *.swp
 *.dll
 *.pdb
+*.a
 
 **/.metadata/*
 **/.recommenders/*
