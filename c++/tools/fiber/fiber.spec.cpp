@@ -1,6 +1,12 @@
 #include <spec.hpp>
 #include "fiber.h"
 
+int gTestVar = 0;
+void test()
+{
+    gTestVar = 1;
+}
+
 BeginSpec(Fiber);
 Describe("class Fiber", [] {
     Context("run()", [] {
@@ -31,6 +37,16 @@ Describe("class Fiber", [] {
 
             Expect(i).toEqual(1);
             Expect(j).toEqual(1);
+        });
+
+        It("can use regular functions", [] {
+            fiber::Fiber f;
+
+            f.run(test);
+
+	    f.wait();
+
+	    Expect(gTestVar).toEqual(1);
         });
     });
 });
