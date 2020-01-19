@@ -29,26 +29,26 @@ namespace fiber
                         notify_wait();
                     }
 
-		    mJobAssignLock.unlock();
+                    mJobAssignLock.unlock();
                 }
             });
         }
 
         inline ~Fiber()
         {
-            // kill the thread (mark it as dead)
-            kill();
+            // free the thread (mark it as dead and execute)
+            free();
 
-            // wait for it to die
+            // wait for it to finish
             join();
 
-            // delete it to free memory
+            // free memory
             delete mThread;
         }
 
         inline void run(std::function<void(void)> func)
         {
-	    mJobAssignLock.lock();
+            mJobAssignLock.lock();
             // assign the job
             mJob = func;
 
@@ -56,16 +56,6 @@ namespace fiber
             mHasTask = true;
 
             // signal there is a job waiting
-            notify_job();
-            notify_wait();
-        }
-
-        inline void kill()
-        {
-            // prevent the while loop from executing
-            mAlive = false;
-
-            // activate the condition variables so the program resumes
             notify_job();
             notify_wait();
         }
@@ -81,7 +71,7 @@ namespace fiber
        private:
         std::thread* mThread = nullptr;
 
-	std::mutex mJobAssignLock;
+        std::mutex mJobAssignLock;
 
         std::mutex mJobLock;
         std::condition_variable mJobVar;
@@ -120,6 +110,16 @@ namespace fiber
         inline bool has_task()
         {
             return mHasTask;
+        }
+
+        inline void free()
+        {
+            // prevent the while loop from executing
+            mAlive = false;
+
+            // activate the condition variables so the program resumes
+            notify_job();
+            notify_wait();
         }
     };
 }  // namespace fiber
