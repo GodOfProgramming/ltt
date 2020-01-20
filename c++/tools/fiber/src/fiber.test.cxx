@@ -9,16 +9,20 @@ int main()
     fiber::Fiber f;
     int num;
 
-    f.run([&num] {
+    f.assign([&num] {
         std::cout << "Enter a number: ";
         std::cin >> num;
     });
+
+    f.run();
 
     f.wait();
 
     std::cout << "you entered: " << num << '\n';
 
-    f.run([&num] { num = 0; });
+    f.assign([&num] { num = 0; });
+
+    f.run();
 
     std::this_thread::sleep_for(1s);
 
