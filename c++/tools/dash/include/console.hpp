@@ -91,6 +91,12 @@ namespace dash
             ((std::cout << std::forward<Args>(args)), ...) << setOpt<Mod::M_FullReset>();
         }
 
+        template <typename... Args>
+        void writeLine(Args&&... args)
+        {
+	    write(args..., '\n');
+        }
+
        private:
         template <Mod E>
         struct tostr
