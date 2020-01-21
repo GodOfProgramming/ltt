@@ -1,4 +1,4 @@
-#!/usr/bin/ruby
+#!/bin/ruby
 
 count = ARGV[0].to_i || 0
 
