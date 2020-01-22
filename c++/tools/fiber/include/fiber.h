@@ -17,17 +17,16 @@ namespace fiber
 
             mThread = new std::thread([this]() -> void {
                 while (mAlive) {
-
                     // If there is no job present, wait
-		    
+
                     if (!mJob || !mHasTask) {
                         std::unique_lock<std::mutex> lock(mJobLock);
                         mJobVar.wait(lock);
                     }
 
                     // when there is a job present, execute
-		    
-		    mJobAssignLock.lock();
+
+                    mJobAssignLock.lock();
 
                     if (mJob && mHasTask) {
                         mJob();
@@ -52,16 +51,17 @@ namespace fiber
             delete mThread;
         }
 
-	inline void assign(std::function<void(void)> func) {
-	    // lock so if there is a running job it waits
+        inline void assign(std::function<void(void)> func)
+        {
+            // lock so if there is a running job it waits
             mJobAssignLock.lock();
 
             // assign the job
             mJob = func;
 
-	    // unlock so the task can run
-	    mJobAssignLock.unlock();
-	}
+            // unlock so the task can run
+            mJobAssignLock.unlock();
+        }
 
         inline void run()
         {
@@ -78,6 +78,11 @@ namespace fiber
                 std::unique_lock<std::mutex> lock(mWaitLock);
                 mWaitVar.wait(lock);
             }
+        }
+
+        inline bool isAlive()
+        {
+            return mAlive;
         }
 
        private:
