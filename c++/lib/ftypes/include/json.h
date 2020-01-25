@@ -9,6 +9,14 @@
 
 namespace json
 {
+    /* Entire purpose is to be able to set a field as an array while keeping the rapidjson abstraction */
+    class Array
+    {};
+
+    /* Entire purpose is to be able to set a field as an object while keeping the rapidjson abstraction */
+    class Object
+    {};
+
     class JSON
     {
        public:
@@ -27,7 +35,7 @@ namespace json
 
             if (!result && mDoc.HasParseError()) {
                 error_stream << "Document parse error: " << mDoc.GetParseError();
-		mErr = error_stream.str();
+                mErr = error_stream.str();
                 return false;
             }
 
@@ -104,7 +112,7 @@ namespace json
 
        private:
         rapidjson::Document mDoc;
-	std::string mErr;
+        std::string mErr;
 
         template <typename T>
         void setValue(rapidjson::Value* member, T value);
@@ -190,6 +198,20 @@ namespace json
     {
         member->SetObject();
         *member = rapidjson::Value(*value, mDoc.GetAllocator());
+    }
+
+    template <>
+    inline void JSON::setValue(rapidjson::Value* member, Object object)
+    {
+	(void)object;
+        member->SetObject();
+    }
+
+    template <>
+    inline void JSON::setValue(rapidjson::Value* member, Array array)
+    {
+	(void)array;
+        member->SetArray();
     }
 
     /* Getters */

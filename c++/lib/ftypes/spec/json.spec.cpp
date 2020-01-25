@@ -27,9 +27,11 @@ Describe("class JSON", [] {
 
                 doc.set(1, "root1");
                 doc.set(2, "root2", "child");
+		doc.set(json::Object(), "root3");
+		doc.set(json::Array(), "root4");
 
                 auto out = doc.toString();
-                Expect(out).toEqual(R"({"root1":1,"root2":{"child":2}})");
+                Expect(out).toEqual(R"({"root1":1,"root2":{"child":2},"root3":{},"root4":[]})");
 
                 int root1 = doc.get<int>("root1");
                 int root2_child = doc.get<int>("root2", "child");
