@@ -1,5 +1,8 @@
 #pragma once
 #include <iostream>
+#include <string>
+#include <ctime>
+#include <strings.h>
 
 #define CODE_FORGROUND_RESET "\x1b[39m"
 #define CODE_FORGROUND_BLACK "\x1b[30m"
@@ -94,10 +97,26 @@ namespace dash
         template <typename... Args>
         void writeLine(Args&&... args)
         {
-	    write(args..., '\n');
+            write(args..., '\n');
+        }
+
+        template <typename... Args>
+        void log(Args&&... args)
+        {
+            writeLine('[', StrTime(), "] ", args...);
         }
 
        private:
+        static inline std::string StrTime()
+        {
+            char timebuff[16];
+            bzero(timebuff, sizeof(timebuff));
+            auto t = time(nullptr);
+            auto timestruct = localtime(&t);
+            std::strftime(timebuff, sizeof(timebuff) - 1, "%I:%M:%S %P", timestruct);
+            return std::string(timebuff);
+        }
+
         template <Mod E>
         struct tostr
         {

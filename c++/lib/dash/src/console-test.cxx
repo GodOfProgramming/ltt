@@ -9,5 +9,8 @@ int main()
         console.setOpt<dash::Mod::BG_White>(),
         "bar",
         '\n');
+
+    std::cout << "HERE\n";
+    console.log("test log");
     return 0;
 }
