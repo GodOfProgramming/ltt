@@ -1,9 +1,6 @@
-require_relative 'lazy_variable'
+class Test
+    def test
+	puts 'test'
+    end
+end
 
-x = LazyVariable.new
-
-x.set {
-	"something"
-}
-
-puts x.get
