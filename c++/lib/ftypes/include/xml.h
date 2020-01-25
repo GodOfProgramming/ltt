@@ -59,6 +59,16 @@ namespace xml
             Node::ForEachChild(mDoc.first_node(), callback);
         }
 
+        inline Node findFirstNode(std::string name) {
+            auto result = mDoc.first_node(name.c_str());
+            return result ? result : Node(nullptr);
+        }
+
+        inline Node findLastNode(std::string name) {
+            auto result = mDoc.last_node(name.c_str());
+            return result ? Node(result) : Node(nullptr);
+        }
+
         inline std::string err()
         {
             return mErr;

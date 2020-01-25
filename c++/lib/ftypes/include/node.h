@@ -43,7 +43,30 @@ namespace xml
                 callback(attr);
             }
         }
-        inline Attribute findFirst(std::string name)
+
+        inline Node findFirstNode(std::string name) {
+            if (Exists) {
+                auto child = mInternal->first_node(name.c_str());
+                if (child) {
+                    return Node(child);
+                }
+            }
+
+            return Node(nullptr);
+        }
+
+        inline Node findLastNode(std::string name) {
+            if (Exists) {
+                auto child = mInternal->last_node(name.c_str());
+                if (child) {
+                    return Node(child);
+                }
+            }
+
+            return Node(nullptr);
+        }
+
+        inline Attribute findFirstAttr(std::string name)
         {
             return Exists ? mInternal->first_attribute(name.c_str()) : Attribute(nullptr);
         }
@@ -68,4 +91,3 @@ namespace xml
     };
 
 }  // namespace xml
-

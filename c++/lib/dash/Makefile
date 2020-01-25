@@ -20,8 +20,8 @@ LIBRARY_DIRS_SPEC	:=
 LIBRARIES		:= -lpthread
 LIBRARIES_SPEC		:=
 
-EXE			:= console.test
-EXE_SPEC		:= console.spec
+EXE			:= dash.test
+EXE_SPEC		:= dash.spec
 
 BIN			:= bin
 OBJ			:= obj
