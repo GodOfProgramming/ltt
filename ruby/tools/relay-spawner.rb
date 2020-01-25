@@ -5,7 +5,7 @@ require 'json'
 require 'string'
 require 'set'
 
-RUNNING_RELAYS_FILENAME = "#{ENV['HOME']}/memtmp/running-relays.json"
+RELAY_PIDS_FILENAME = "#{ENV['HOME']}/memtmp/running-relays.txt"
 
 options = {}
 
@@ -31,26 +31,27 @@ end
 
 relay_pids = Set.new
 
-if File.exists? RUNNING_RELAYS_FILENAME
-    File.open RUNNING_RELAYS_FILENAME do |file|
-	json = file.read
-	arr = JSON.parse json
-	relay_pids = arr.to_set
+if File.exists? RELAY_PIDS_FILENAME
+    File.foreach(RELAY_PIDS_FILENAME) do |line|
+	relay_pids.add(line)
     end
 end
 
 if options[:kill]
     for relay_pid in relay_pids do
-	puts "Killing #{relay_pid}"
-	Process.kill('KILL', relay_pid)
-	relay_pids.delete relay_pid
+	if relay_pid.numeric?
+	    relay_pid = relay_pid.to_i
+	    puts "Killing #{relay_pid}"
+	    Process.kill('KILL', relay_pid)
+	end
     end
+    File.delete RELAY_PIDS_FILENAME if File.exists? RELAY_PIDS_FILENAME
 elsif options[:info]
     puts "Current number of running relays: #{relay_pids.length}"
     exit
 elsif options[:clear]
     puts "Clearing #{relay_pids.length} entries"
-    relay_pids.clear
+    File.delete RELAY_PIDS_FILENAME if File.exists? RELAY_PIDS_FILENAME
 else
     start_port = ARGV[0]
     end_port = start_port
@@ -71,14 +72,9 @@ else
 
     for port in start_port..end_port do
 	puts "Adding relay 127.0.0.1:#{port}"
-	pid = fork { exec("RELAY_ADDRESS='127.0.0.1:#{port}' dist/relay") }
-	#pid = fork { exec("sleep 60") }
-	puts "Started relay with pid: #{pid}"
-	relay_pids.add(pid)
+	#command_str = "RELAY_ADDRESS='127.0.0.1:#{port}' $(pwd)/dist/relay &; echo $! >> #{RELAY_PIDS_FILENAME}"
+	command_str = "RELAY_ADDRESS='127.0.0.1:#{port}' $(pwd)/dist/relay & echo $! >> #{RELAY_PIDS_FILENAME}"
+	system("/bin/bash -c '#{command_str}'")
     end
-end
-
-File.open RUNNING_RELAYS_FILENAME, "w" do |file|
-    file.write relay_pids.to_a.to_json
 end
 
