@@ -5,12 +5,11 @@ BeginSpec(XML);
 Describe("class XML", [] {
     Context("parse()", [] {
         Context("invalid format", [] {
-            const char* invalid_xml =
-                "<?xml version=\"1.0\" encoding=\"utf8\"?>"
-                "<first>"
-                "<second>"
-                "</second>"
-                "</first";  // unclosed tag
+            const char* invalid_xml = R"(<?xml version="1.0" encoding="utf8"?>)"
+                                      "<first>"
+                                      "<second>"
+                                      "</second>"
+                                      "</first";  // unclosed tag
             It("returns false", [&] {
                 xml::XML doc;
                 Expect(doc.parse(invalid_xml)).toEqual(false);
@@ -18,12 +17,11 @@ Describe("class XML", [] {
             });
         });
         Context("valid format", [] {
-            const char* valid_xml =
-                "<?xml version=\"1.0\" encoding=\"utf8\"?>"
-                "<first>"
-                "<second>"
-                "</second>"
-                "</first>";
+            const char* valid_xml = R"(<?xml version="1.0" encoding="utf8"?>)"
+                                    "<first>"
+                                    "<second>"
+                                    "</second>"
+                                    "</first>";
             It("returns true", [&] {
                 xml::XML doc;
                 Expect(doc.parse(valid_xml)).toEqual(true);
@@ -34,16 +32,15 @@ Describe("class XML", [] {
 
     Context("forEach()", [] {
         It("loops over the tags in the right order", [] {
-            const char* data =
-                "<?xml version=\"1.0\" encoding=\"utf8\"?>"
-                "<first>"
-                "<second>"
-                "<third>"
-                "</third>"
-                "</second>"
-                "<fourth>"
-                "</fourth>"
-                "</first>";
+            const char* data = R"(<?xml version="1.0" encoding="utf8"?>)"
+                               "<first>"
+                               "<second>"
+                               "<third>"
+                               "</third>"
+                               "</second>"
+                               "<fourth>"
+                               "</fourth>"
+                               "</first>";
             xml::XML doc;
             doc.parse(data);
 
@@ -54,18 +51,17 @@ Describe("class XML", [] {
         });
     });
 
-    const char* data =
-        "<?xml version=\"1.0\" encoding=\"utf8\"?>"
-        "<root>"
-        "<inner>"
-        "<this value=\"first\">"
-        "</this>"
-        "<this value=\"second\">"
-        "</this>"
-        "</inner>"
-        "<this value=\"third\">"
-        "</this>"
-        "</root>";
+    const char* data = R"(<?xml version="1.0" encoding="utf8"?>)"
+                       "<root>"
+                       "<inner>"
+                       R"(<this value="first">)"
+                       "</this>"
+                       R"(<this value="second">)"
+                       "</this>"
+                       "</inner>"
+                       R"(<this value="third">)"
+                       "</this>"
+                       "</root>";
 
     Context("findFirstNode()", [&] {
         It("returns a node", [&] {
@@ -113,10 +109,9 @@ EndSpec();
 
 BeginSpec(Node);
 Describe("class Node", [] {
-    const char* data =
-        "<?xml version=\"1.0\" encoding=\"utf8\"?>"
-        "<found>"
-        "</found>";
+    const char* data = R"(<?xml version="1.0" encoding="utf8"?>)"
+                       "<found>"
+                       "</found>";
     Context("Exists", [&] {
         Context("Does not exist", [&] {
             It("returns false", [&] {
