@@ -5,7 +5,7 @@ BeginSpec(XML);
 Describe("class XML", [] {
     Context("parse()", [] {
         Context("invalid format", [] {
-            const char* valid_xml =
+            const char* invalid_xml =
                 "<?xml version=\"1.0\" encoding=\"utf8\"?>"
                 "<first>"
                 "<second>"
@@ -13,7 +13,7 @@ Describe("class XML", [] {
                 "</first";  // unclosed tag
             It("returns false", [&] {
                 xml::XML doc;
-                Expect(doc.parse(valid_xml)).toEqual(false);
+                Expect(doc.parse(invalid_xml)).toEqual(false);
             });
         });
         Context("valid format", [] {
