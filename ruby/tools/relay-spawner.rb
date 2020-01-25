@@ -27,9 +27,6 @@ end
 
 puts "Current number of running relays: #{running_relays.length}"
 
-def spawn_relay running_relays, port
-end
-
 if options[:kill]
     for relay in running_relays do
 	puts `kill #{relay}`
