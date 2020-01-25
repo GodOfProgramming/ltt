@@ -14,6 +14,7 @@ Describe("class XML", [] {
             It("returns false", [&] {
                 xml::XML doc;
                 Expect(doc.parse(invalid_xml)).toEqual(false);
+		Expect(doc.err()).toEqual("XML parse error: expected >");
             });
         });
         Context("valid format", [] {
@@ -26,6 +27,7 @@ Describe("class XML", [] {
             It("returns true", [&] {
                 xml::XML doc;
                 Expect(doc.parse(valid_xml)).toEqual(true);
+		Expect(doc.err()).toEqual("");
             });
         });
     });
