@@ -5,7 +5,7 @@ SRC			:= src
 INCLUDE			:= include
 SPEC			:= spec
 
-INCLUDE_DIRS		:= -I$(INCLUDE) -I$(DASH_INCLUDE)
+INCLUDE_DIRS		:= -I$(INCLUDE) -I$(DASH_INCLUDE) -I$(RAPIDXML_INCLUDE)
 INCLUDE_DIRS_SPEC	:= -I$(CSPEC_INCLUDE)
 
 STATIC_LIBS		:= 
@@ -17,8 +17,8 @@ LIBRARY_DIRS_SPEC	:=
 LIBRARIES		:= -lpthread
 LIBRARIES_SPEC		:=
 
-EXE			:= epoch.test
-EXE_SPEC		:= epoch.spec
+EXE			:= ftypes.test
+EXE_SPEC		:= ftypes.spec
 
 BIN			:= bin
 OBJ			:= obj
