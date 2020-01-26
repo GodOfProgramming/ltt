@@ -12,7 +12,7 @@ namespace art
         PNG = FIF_PNG,
         JPEG = FIF_JPEG,
         GIF = FIF_GIF,
-	BMP = FIF_BMP
+        BMP = FIF_BMP
     };
 
     struct Pixel
@@ -29,31 +29,36 @@ namespace art
     class Image
     {
        public:
-        // do not use
         Image() = default;
 
-        /*FreeImage handles this*/
+        /* Load a image using filename */
         Image(std::string filename);
 
-        /*In terms of how many pixels high and wide*/
+        /* Create a blank image with width and length in pixels */
         Image(Pixel* data, size_t width, size_t rows);
 
-        /*In terms of how many bytes high and wide*/
+        /* Create a blank image with width and length in bytes */
         Image(const unsigned char* data, size_t width, size_t rows);
 
-        /*Create blank image of specified width and height, in bytes*/
+        /* Create blank image of specified width and height, in bytes */
         Image(size_t width, size_t rows);
 
+        /* Copy the other image to this */
+        void copy(const Image& other);
+
+        /* Loads the file using the supplied file name from the constructor */
         bool load();
+
+        /* Sets the filename to the supplied one and loads */
         bool load(std::string filename);
 
         unsigned char* getData();
 
-        /* number of colums, in pixels */
+        /* Number of colums, in pixels */
         unsigned int lengthInPixels();
-        /* number of columns, in bytes */
+        /* Number of columns, in bytes */
         unsigned int lengthInBytes();
-        /* number of rows */
+        /* Number of rows */
         unsigned int rows();
 
         /* length in pixels */
@@ -64,10 +69,14 @@ namespace art
         void fill(unsigned char color);
         void fill(unsigned char r, unsigned char g, unsigned char b);
 
-        // other is written to this
-        void writeBytes(Image& other, size_t x, size_t y);
-        void writePixels(Image& other, size_t x, size_t y);
-        void blend(Image& other, size_t x, size_t y);
+        // Write to this image using data, at offset x & y in bytes
+        void writeBytes(Image& data, size_t x, size_t y);
+
+        // Write to this image using data, at offset x & y in pixels
+        void writePixels(Image& data, size_t x, size_t y);
+
+        // Blend this image using data, at offset x & y in pixels
+        void blend(Image& data, size_t x, size_t y);
 
         bool save();
         bool save(std::string filename);
@@ -87,10 +96,8 @@ namespace art
         bool loadFromFile();
     };
 
-    inline Image::Image(std::string filename)
-    {
-        load(filename);
-    }
+    inline Image::Image(std::string filename) : mFilename(filename)
+    {}
 
     inline Image::Image(size_t width, size_t rows)
     {
@@ -122,15 +129,25 @@ namespace art
         this->mData.insert(this->mData.begin(), data, data + offset);
     }
 
-    inline bool Image::load(std::string filename)
+    inline void Image::copy(const Image& other)
     {
-        mFilename = filename;
-        return load();
+        this->mFilename = other.mFilename;
+        this->mFormat = other.mFormat;
+        this->mData.assign(other.mData.begin(), other.mData.end());
+        this->mByteWidth = other.mByteWidth;
+        this->mRows = other.mRows;
+        // don't copy the error msg if there is one
     }
 
     inline bool Image::load()
     {
         return loadFromFile();
+    }
+
+    inline bool Image::load(std::string filename)
+    {
+        mFilename = filename;
+        return load();
     }
 
     inline bool Image::loadFromFile()
@@ -223,7 +240,7 @@ namespace art
 
     inline bool Image::save(std::string filename)
     {
-	auto fname = filename.c_str();
+        auto fname = filename.c_str();
         return save(filename, (ImageFormat)FreeImage_GetFileType(fname));
     }
 
@@ -234,10 +251,10 @@ namespace art
 
     inline bool Image::save(std::string filename, ImageFormat format)  // does not work
     {
-	if (format == ImageFormat::Unknown) {
-	    mErr = "unknown file type";
-	    return false;
-	}
+        if (format == ImageFormat::Unknown) {
+            mErr = "unknown file type";
+            return false;
+        }
 
         unsigned int pixelWidth = lengthInPixels();
         FIBITMAP* bitmap = FreeImage_Allocate(pixelWidth, mRows, 32);
@@ -298,9 +315,8 @@ namespace art
         auto otherWidth = other.lengthInBytes();
         auto otherRows = other.rows();
 
-        auto thisData =
-            (unsigned char*)mData.data();  // no need for cast, in case I change it to a void* later for some unforseen reason
-        auto otherData = (unsigned char*)other.mData.data();
+        auto thisData = mData.data();
+        auto otherData = other.mData.data();
 
         for (size_t h = 0; h < otherRows; h++) {
             auto hLoc = h + y;
