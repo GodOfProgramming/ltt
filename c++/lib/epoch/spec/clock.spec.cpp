@@ -1,5 +1,5 @@
 #include <spec.hpp>
-#include <clock.h>
+#include <clock.hpp>
 #include <thread>
 
 using namespace std::chrono_literals;

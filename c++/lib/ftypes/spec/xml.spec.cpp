@@ -1,5 +1,5 @@
 #include <spec.hpp>
-#include "xml.h"
+#include "xml.hpp"
 
 BeginSpec(XML);
 Describe("class XML", [] {

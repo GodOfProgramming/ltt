@@ -19,7 +19,9 @@ namespace fiber
 
         void wait();
 
-        bool isAlive();
+        bool is_alive();
+
+        bool has_task();
 
        private:
         std::thread* mThread = nullptr;
@@ -44,8 +46,6 @@ namespace fiber
         void notify();
 
         void join();
-
-        bool has_task();
 
         void free();
     };
@@ -120,7 +120,7 @@ namespace fiber
         }
     }
 
-    inline bool Fiber::isAlive()
+    inline bool Fiber::is_alive()
     {
         return mAlive;
     }

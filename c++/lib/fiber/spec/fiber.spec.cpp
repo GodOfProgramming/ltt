@@ -1,5 +1,5 @@
 #include <spec.hpp>
-#include "fiber.h"
+#include "fiber.hpp"
 
 int gTestVar = 0;
 void test()

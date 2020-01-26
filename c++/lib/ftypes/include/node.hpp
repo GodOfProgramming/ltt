@@ -1,7 +1,7 @@
 #pragma once
 #include <functional>
 #include <rapidxml.hpp>
-#include "attribute.h"
+#include "attribute.hpp"
 
 namespace xml
 {

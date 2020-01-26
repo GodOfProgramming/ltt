@@ -1,5 +1,5 @@
 #include <spec.hpp>
-#include "json.h"
+#include "json.hpp"
 
 BeginSpec(JSON);
 Describe("class JSON", [] {

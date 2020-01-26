@@ -2,8 +2,8 @@
 #include <vector>
 #include <sstream>
 #include <rapidxml.hpp>
-#include "node.h"
-#include "attribute.h"
+#include "node.hpp"
+#include "attribute.hpp"
 
 namespace xml
 {
