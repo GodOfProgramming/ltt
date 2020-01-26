@@ -107,15 +107,7 @@ namespace dash
         }
 
        private:
-        static inline std::string StrTime()
-        {
-            char timebuff[16];
-            bzero(timebuff, sizeof(timebuff));
-            auto t = time(nullptr);
-            auto timestruct = localtime(&t);
-            std::strftime(timebuff, sizeof(timebuff) - 1, "%I:%M:%S %P", timestruct);
-            return std::string(timebuff);
-        }
+        static std::string StrTime();
 
         template <Mod E>
         struct tostr
@@ -123,6 +115,16 @@ namespace dash
             const char* const value = nullptr;
         };
     };
+
+    inline std::string Console::StrTime()
+    {
+        char timebuff[16];
+        bzero(timebuff, sizeof(timebuff));
+        auto t = time(nullptr);
+        auto timestruct = localtime(&t);
+        std::strftime(timebuff, sizeof(timebuff) - 1, "%I:%M:%S %P", timestruct);
+        return std::string(timebuff);
+    }
 
     /* Forground */
     template <>

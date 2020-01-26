@@ -21,10 +21,7 @@ namespace epoch
         Clock() = default;
 
         /* Timestamps the clock */
-        inline void reset()
-        {
-            mNow = InternalClock::now();
-        }
+        void reset();
 
         /* Get how much time as elasped since starting */
         template <typename UnitOfTime>
@@ -71,4 +68,9 @@ namespace epoch
     {
         return diff<std::ratio<1>>();
     }
-}  // namespace duration
+
+    inline void Clock::reset()
+    {
+        mNow = InternalClock::now();
+    }
+}  // namespace epoch
