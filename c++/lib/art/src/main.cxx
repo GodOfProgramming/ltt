@@ -5,6 +5,6 @@ int main()
     art::Image img;
     img.load("test.png");
     img.fill(255);
-    img.
+    img.save("out.png");
     return 0;
 }

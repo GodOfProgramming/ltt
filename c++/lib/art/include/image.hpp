@@ -13,12 +13,6 @@ namespace art
         GIF = FIF_GIF
     };
 
-    enum class ImageType
-    {
-        Byte,
-        Pixel
-    };
-
     struct Pixel
     {
         unsigned char data[4];
@@ -75,13 +69,16 @@ namespace art
         void writePixels(Image& other, size_t x, size_t y);
         void blend(Image& other, size_t x, size_t y);
 
-        void save(ImageFormat format = ImageFormat::PNG);
-        void saveAs(std::string filename, ImageFormat format = ImageFormat::PNG);
+        void save();
+        void save(std::string filename);
+        void save(ImageFormat format);
+        void save(std::string filename, ImageFormat format);
 
         std::string err();
 
        private:
         std::string mFilename;
+        ImageFormat mFormat;
         std::vector<unsigned char> mData;
         const Pixel* mPixels;
         unsigned int mByteWidth;
@@ -144,12 +141,11 @@ namespace art
          * temp
          */
 
-        FREE_IMAGE_FORMAT format;
         FIBITMAP* fImage;
 
         auto filename = mFilename.c_str();
-        format = FreeImage_GetFileType(filename);
-        fImage = FreeImage_Load(format, filename);
+        mFormat = (ImageFormat)FreeImage_GetFileType(filename);
+        fImage = FreeImage_Load((FREE_IMAGE_FORMAT)mFormat, filename);
 
         if (!fImage) {
             std::stringstream ss;
@@ -209,12 +205,22 @@ namespace art
         return mRows;
     }
 
-    inline void Image::save(ImageFormat format)
+    inline void Image::save()
     {
-        saveAs(mFilename, format);
+        save(mFilename, mFormat);
     }
 
-    inline void Image::saveAs(std::string filename, ImageFormat format)  // does not work
+    inline void Image::save(std::string filename)
+    {
+        save(filename, (ImageFormat)FreeImage_GetFileType(filename.c_str()));
+    }
+
+    inline void Image::save(ImageFormat format)
+    {
+        save(mFilename, format);
+    }
+
+    inline void Image::save(std::string filename, ImageFormat format)  // does not work
     {
         unsigned int pixelWidth = lengthInPixels();
         FIBITMAP* bitmap = FreeImage_Allocate(pixelWidth, mRows, 32);
@@ -346,12 +352,14 @@ namespace art
         return mErr;
     }
 
-    inline Pixel::operator=(const Pixel& other)
+    inline Pixel& Pixel::operator=(const Pixel& other)
     {
         this->r = other.r;
         this->g = other.g;
         this->b = other.b;
         this->a = other.a;
+
+        return *this;
     }
 
     inline void Pixel::blend(Pixel& other)
