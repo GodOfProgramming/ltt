@@ -20,27 +20,11 @@ namespace json
     class JSON
     {
        public:
-        inline JSON()
-        {
-            mDoc.SetObject();  // default document to type object
-        }
-
+        JSON();
         ~JSON() = default;
 
         /* Parses the document. Returns true if no parse errors */
-        inline bool parse(const std::string& data)
-        {
-            rapidjson::ParseResult result = mDoc.Parse(data.c_str());
-            std::stringstream error_stream;
-
-            if (!result && mDoc.HasParseError()) {
-                error_stream << "Document parse error: " << mDoc.GetParseError();
-                mErr = error_stream.str();
-                return false;
-            }
-
-            return true;
-        }
+        bool parse(const std::string& data);
 
         /* Sets the member with the specified value */
         template <typename T, typename... Args>
@@ -86,29 +70,12 @@ namespace json
         }
 
         /* Outputs the document as a compressed string */
-        inline std::string toString()
-        {
-            rapidjson::StringBuffer buff;
-            rapidjson::Writer<rapidjson::StringBuffer> writer(buff);
-            mDoc.Accept(writer);
-
-            return buff.GetString();
-        }
+        std::string toString();
 
         /* Outputs the document as a formatted string */
-        inline std::string toPrettyString()
-        {
-            rapidjson::StringBuffer buff;
-            rapidjson::PrettyWriter<rapidjson::StringBuffer> pwriter(buff);
-            mDoc.Accept(pwriter);
+        std::string toPrettyString();
 
-            return buff.GetString();
-        }
-
-        inline std::string err()
-        {
-            return mErr;
-        }
+        std::string err();
 
        private:
         rapidjson::Document mDoc;
@@ -154,6 +121,48 @@ namespace json
             return val;
         }
     };
+
+    inline JSON::JSON()
+    {
+        mDoc.SetObject();  // default document to type object
+    }
+
+    inline bool JSON::parse(const std::string& data)
+    {
+        rapidjson::ParseResult result = mDoc.Parse(data.c_str());
+        std::stringstream error_stream;
+
+        if (!result && mDoc.HasParseError()) {
+            error_stream << "Document parse error: " << mDoc.GetParseError();
+            mErr = error_stream.str();
+            return false;
+        }
+
+        return true;
+    }
+
+    inline std::string JSON::toString()
+    {
+        rapidjson::StringBuffer buff;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buff);
+        mDoc.Accept(writer);
+
+        return buff.GetString();
+    }
+
+    inline std::string JSON::toPrettyString()
+    {
+        rapidjson::StringBuffer buff;
+        rapidjson::PrettyWriter<rapidjson::StringBuffer> pwriter(buff);
+        mDoc.Accept(pwriter);
+
+        return buff.GetString();
+    }
+
+    inline std::string JSON::err()
+    {
+        return mErr;
+    }
 
     /* Setters */
 
@@ -203,14 +212,14 @@ namespace json
     template <>
     inline void JSON::setValue(rapidjson::Value* member, Object object)
     {
-	(void)object;
+        (void)object;
         member->SetObject();
     }
 
     template <>
     inline void JSON::setValue(rapidjson::Value* member, Array array)
     {
-	(void)array;
+        (void)array;
         member->SetArray();
     }
 
