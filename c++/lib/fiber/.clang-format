@@ -1,5 +1,5 @@
 ---
-Language:        Cpp
+Language: Cpp
 BasedOnStyle: LLVM
 AccessModifierOffset: -1
 AlignAfterOpenBracket: DontAlign
@@ -51,7 +51,7 @@ ConstructorInitializerAllOnOneLineOrOnePerLine: true
 ConstructorInitializerIndentWidth: 4
 ContinuationIndentWidth: 4
 Cpp11BracedListStyle: false
-DerivePointerAlignment: true
+DerivePointerAlignment: false
 DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
 FixNamespaceComments: true
