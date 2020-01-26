@@ -8,19 +8,19 @@ namespace art
 {
     enum class ImageFormat
     {
+        Unknown = FIF_UNKNOWN,
         PNG = FIF_PNG,
         JPEG = FIF_JPEG,
-        GIF = FIF_GIF
+        GIF = FIF_GIF,
+	BMP = FIF_BMP
     };
 
     struct Pixel
     {
-        unsigned char data[4];
-
-        unsigned char& r = data[0];
-        unsigned char& g = data[1];
-        unsigned char& b = data[2];
-        unsigned char& a = data[3];
+        unsigned char r;
+        unsigned char g;
+        unsigned char b;
+        unsigned char a;
 
         void blend(Pixel& other);
         Pixel& operator=(const Pixel& other);
@@ -69,18 +69,17 @@ namespace art
         void writePixels(Image& other, size_t x, size_t y);
         void blend(Image& other, size_t x, size_t y);
 
-        void save();
-        void save(std::string filename);
-        void save(ImageFormat format);
-        void save(std::string filename, ImageFormat format);
+        bool save();
+        bool save(std::string filename);
+        bool save(ImageFormat format);
+        bool save(std::string filename, ImageFormat format);
 
         std::string err();
 
        private:
         std::string mFilename;
         ImageFormat mFormat;
-        std::vector<unsigned char> mData;
-        const Pixel* mPixels;
+        std::vector<uint8_t> mData;
         unsigned int mByteWidth;
         unsigned int mRows;
         std::string mErr;
@@ -145,6 +144,12 @@ namespace art
 
         auto filename = mFilename.c_str();
         mFormat = (ImageFormat)FreeImage_GetFileType(filename);
+
+        if (mFormat == ImageFormat::Unknown) {
+            mErr = "unknown image type";
+            return false;
+        }
+
         fImage = FreeImage_Load((FREE_IMAGE_FORMAT)mFormat, filename);
 
         if (!fImage) {
@@ -157,6 +162,13 @@ namespace art
         if (FreeImage_GetBPP(fImage) != 32) {
             FIBITMAP* temp = fImage;
             fImage = FreeImage_ConvertTo32Bits(temp);
+
+            if (!fImage) {
+                mErr = "unable to convert to 32 bits per pixel";
+                FreeImage_Unload(temp);
+                return false;
+            }
+
             FreeImage_Unload(temp);
         }
 
@@ -167,7 +179,6 @@ namespace art
 
         size_t offset = mRows * mByteWidth;
 
-        mData.resize(offset);
         mData.insert(mData.begin(), bits, bits + offset);
 
         FreeImage_Unload(fImage);
@@ -205,37 +216,61 @@ namespace art
         return mRows;
     }
 
-    inline void Image::save()
+    inline bool Image::save()
     {
-        save(mFilename, mFormat);
+        return save(mFilename, mFormat);
     }
 
-    inline void Image::save(std::string filename)
+    inline bool Image::save(std::string filename)
     {
-        save(filename, (ImageFormat)FreeImage_GetFileType(filename.c_str()));
+	auto fname = filename.c_str();
+        return save(filename, (ImageFormat)FreeImage_GetFileType(fname));
     }
 
-    inline void Image::save(ImageFormat format)
+    inline bool Image::save(ImageFormat format)
     {
-        save(mFilename, format);
+        return save(mFilename, format);
     }
 
-    inline void Image::save(std::string filename, ImageFormat format)  // does not work
+    inline bool Image::save(std::string filename, ImageFormat format)  // does not work
     {
+	if (format == ImageFormat::Unknown) {
+	    mErr = "unknown file type";
+	    return false;
+	}
+
         unsigned int pixelWidth = lengthInPixels();
         FIBITMAP* bitmap = FreeImage_Allocate(pixelWidth, mRows, 32);
-        mPixels = (const Pixel*)mData.data();
 
+        if (!bitmap) {
+            mErr = "unable to allocate temporary buffer to save";
+            return false;
+        }
+
+        const Pixel* pixels = (const Pixel*)mData.data();
         for (unsigned long r = 0; r < mRows; r++) {
             for (unsigned long c = 0; c < pixelWidth; c++) {
-                Pixel pix = mPixels[r * pixelWidth + c + 0];
+                Pixel pix = pixels[r * pixelWidth + c];
                 RGBQUAD quad = { pix.r, pix.g, pix.b, pix.a };
-                FreeImage_SetPixelColor(bitmap, c, r, &quad);
+                if (!FreeImage_SetPixelColor(bitmap, c, r, &quad)) {
+                    std::stringstream ss;
+                    ss << "unable to set pixel color at coord at (" << c << ", " << r << ')';
+                    mErr = ss.str();
+                    FreeImage_Unload(bitmap);
+                    return false;
+                }
             }
         }
 
-        FreeImage_Save((FREE_IMAGE_FORMAT)format, bitmap, filename.c_str());
+        auto res = FreeImage_Save((FREE_IMAGE_FORMAT)format, bitmap, filename.c_str());
+
+        if (!res) {
+            mErr = "unable to save image";
+        }
+
         FreeImage_Unload(bitmap);
+
+        return res;
     }
 
     inline void Image::fill(unsigned char color)

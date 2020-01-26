@@ -12,6 +12,9 @@
 *.dll
 *.pdb
 *.a
+*.jpg
+*.png
+*.bmp
 
 **/.metadata/*
 **/.recommenders/*
