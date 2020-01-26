@@ -1,3 +1,7 @@
+STABLE			:= false
+
+LIB_NAME		:= misc
+
 CXX			:= g++
 CXX_FLAGS 		:= -Wall -Wextra -std=c++17
 
@@ -5,8 +9,8 @@ SRC			:= src
 INCLUDE			:= include
 SPEC			:= spec
 
-INCLUDE_DIRS		:= -I$(INCLUDE) -I$(DASH_INCLUDE)
-INCLUDE_DIRS_SPEC	:= -I$(CSPEC_INCLUDE)
+INCLUDE_DIRS		:= -I$(INCLUDE)
+INCLUDE_DIRS_SPEC	:= -I$(CSPEC_INCLUDE) -I$(DASH_INCLUDE)
 
 STATIC_LIBS		:= 
 STATIC_LIBS_SPEC	:= libcspec.a
@@ -14,11 +18,11 @@ STATIC_LIBS_SPEC	:= libcspec.a
 LIBRARY_DIRS		:= -L$(HOME)/lib
 LIBRARY_DIRS_SPEC	:= 
 
-LIBRARIES		:= -lpthread
+LIBRARIES		:= -lstdc++fs
 LIBRARIES_SPEC		:=
 
-EXE			:= misc.test
-EXE_SPEC		:= misc.spec
+EXE			:= $(LIB_NAME).test
+EXE_SPEC		:= $(LIB_NAME).spec
 
 BIN			:= bin
 OBJ			:= obj
@@ -31,7 +35,12 @@ SRC_OBJ_FILES	:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRC_FILES))
 SPEC_FILES	:= $(call rwildcard,$(SPEC),*.spec.cpp)
 SPEC_OBJ_FILES	:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.o, $(SPEC_FILES))
 
+
+ifeq "$(STABLE)" "true"
 all: make_dirs $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
+else
+all:
+endif
 
 $(BIN)/$(EXE): $(SRC_OBJ_FILES) $(SRC)/*.cxx
 	$(CXX) $(CXX_FLAGS) $(INCLUDE_DIRS) $(LIBRARY_DIRS) $^ $(STATIC_LIBS) -o $@ $(LIBRARIES)

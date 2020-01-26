@@ -1,4 +1,4 @@
-LIB_NAME		:= art
+LIB_NAME		:= sys
 
 CXX			:= g++
 CXX_FLAGS 		:= -Wall -Wextra -std=c++17
@@ -11,13 +11,13 @@ INCLUDE_DIRS		:= -I$(INCLUDE)
 INCLUDE_DIRS_SPEC	:= -I$(CSPEC_INCLUDE) -I$(DASH_INCLUDE)
 
 STATIC_LIBS		:= 
-STATIC_LIBS_SPEC	:= libcspec.a
+STATIC_LIBS_SPEC	:= 
 
 LIBRARY_DIRS		:= -L$(HOME)/lib
-LIBRARY_DIRS_SPEC	:= 
+LIBRARY_DIRS_SPEC	:= -L.
 
-LIBRARIES		:= -lfreeimage
-LIBRARIES_SPEC		:=
+LIBRARIES		:= -lstdc++fs 
+LIBRARIES_SPEC		:= -lcspec
 
 EXE			:= $(LIB_NAME).test
 EXE_SPEC		:= $(LIB_NAME).spec

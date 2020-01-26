@@ -1,8 +1,7 @@
+LIB_NAME		:= dash
+
 CXX			:= g++
 CXX_FLAGS 		:= -Wall -Wextra -std=c++17
-
-AR			:= ar
-AR_FLAGS		:= rvs
 
 SRC			:= src
 INCLUDE			:= include
@@ -17,11 +16,11 @@ STATIC_LIBS_SPEC	:= libcspec.a
 LIBRARY_DIRS		:= -L$(HOME)/lib
 LIBRARY_DIRS_SPEC	:= 
 
-LIBRARIES		:= -lpthread
+LIBRARIES		:=
 LIBRARIES_SPEC		:=
 
-EXE			:= dash.test
-EXE_SPEC		:= dash.spec
+EXE			:= $(LIB_NAME).test
+EXE_SPEC		:= $(LIB_NAME).spec
 
 BIN			:= bin
 OBJ			:= obj

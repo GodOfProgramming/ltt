@@ -1,3 +1,5 @@
+LIB_NAME		:= fiber
+
 CXX			:= g++
 CXX_FLAGS 		:= -Wall -Wextra -std=c++17
 
@@ -5,8 +7,8 @@ SRC			:= src
 INCLUDE			:= include
 SPEC			:= spec
 
-INCLUDE_DIRS		:= -I$(INCLUDE) -I$(DASH_INCLUDE)
-INCLUDE_DIRS_SPEC	:= -I$(CSPEC_INCLUDE)
+INCLUDE_DIRS		:= -I$(INCLUDE)
+INCLUDE_DIRS_SPEC	:= -I$(CSPEC_INCLUDE) -I$(DASH_INCLUDE)
 
 STATIC_LIBS		:= 
 STATIC_LIBS_SPEC	:= libcspec.a
@@ -17,8 +19,8 @@ LIBRARY_DIRS_SPEC	:=
 LIBRARIES		:= -lpthread
 LIBRARIES_SPEC		:=
 
-EXE			:= fiber.test
-EXE_SPEC		:= fiber.spec
+EXE			:= $(LIB_NAME).test
+EXE_SPEC		:= $(LIB_NAME).spec
 
 BIN			:= bin
 OBJ			:= obj

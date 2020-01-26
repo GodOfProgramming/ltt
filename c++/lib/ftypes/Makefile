@@ -1,3 +1,5 @@
+LIB_NAME		:= ftypes
+
 CXX			:= g++
 CXX_FLAGS 		:= -Wall -Wextra -std=c++17
 
@@ -5,8 +7,8 @@ SRC			:= src
 INCLUDE			:= include
 SPEC			:= spec
 
-INCLUDE_DIRS		:= -I$(INCLUDE) -I$(DASH_INCLUDE) -I$(RAPIDXML_INCLUDE) -I$(RAPIDJSON_INCLUDE)
-INCLUDE_DIRS_SPEC	:= -I$(CSPEC_INCLUDE)
+INCLUDE_DIRS		:= -I$(INCLUDE) -I$(RAPIDXML_INCLUDE) -I$(RAPIDJSON_INCLUDE)
+INCLUDE_DIRS_SPEC	:= -I$(CSPEC_INCLUDE) -I$(DASH_INCLUDE)
 
 STATIC_LIBS		:= 
 STATIC_LIBS_SPEC	:= libcspec.a
@@ -14,11 +16,11 @@ STATIC_LIBS_SPEC	:= libcspec.a
 LIBRARY_DIRS		:= -L$(HOME)/lib
 LIBRARY_DIRS_SPEC	:= 
 
-LIBRARIES		:= -lpthread
+LIBRARIES		:=
 LIBRARIES_SPEC		:=
 
-EXE			:= ftypes.test
-EXE_SPEC		:= ftypes.spec
+EXE			:= $(LIB_NAME).test
+EXE_SPEC		:= $(LIB_NAME).spec
 
 BIN			:= bin
 OBJ			:= obj
