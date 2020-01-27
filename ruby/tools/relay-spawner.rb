@@ -9,7 +9,7 @@ require 'ostruct'
 require 'string'
 require 'process'
 
-RELAY_PIDS_FILENAME = "#{ENV['HOME']}/memtmp/running-relays.txt"
+RELAY_PIDS_FILENAME = "#{ENV['MEMTMP']}/running-relays.txt"
 
 options = OpenStruct.new
 options.kill = false
