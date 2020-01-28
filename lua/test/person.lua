@@ -1,4 +1,4 @@
-require '.actor'
+require 'actor'
 
 -- meta class
 Person = Actor

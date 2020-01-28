@@ -1,4 +1,4 @@
-require '.object'
+require 'object'
 
 -- meta class
 Actor = extend(Object, {

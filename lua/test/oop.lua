@@ -1,4 +1,4 @@
-require '.person'
+require 'person'
 
 foo = Actor:new{ name = 'human' }
 

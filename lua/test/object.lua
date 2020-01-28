@@ -1,4 +1,4 @@
-require '.extendable'
+require 'extendable'
 
 -- metaclass
 
