@@ -2,6 +2,7 @@
 require 'optparse'
 require 'json'
 require 'ostruct'
+require 'faker'
 
 # From one-offs
 require 'string'
@@ -50,9 +51,11 @@ first_part = parts.join('.')
 current_address = pair.first.to_i
 current_port = pair.last.to_i
 for i in 0...options.number_of_entries do
-    data["#{first_part}.#{current_address}:#{current_port}"] = {
-	latitude: rand * 90 * (rand > 0.5 ? 1 : -1),
-	    longitude: rand * 180 * (rand > 0.5 ? 1 : -1)
+    addr = "#{first_part}.#{current_address}:#{current_port}"
+    data[addr] = {
+	latitude: Faker::Address.latitude,
+	longitude: Faker::Address.longitude,
+	datacenter_name: "#{Faker::Address.country}:#{Faker::Address.state}:#{Faker::Address.city}"
     }
 
     current_address += 1
