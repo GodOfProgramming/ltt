@@ -40,7 +40,7 @@ OptionParser.new do |opts|
     end
 end.parse!
 
-output = {}
+data = {}
 
 parts = options.starting_address.split('.')
 pair = parts.last.split(':')
@@ -50,7 +50,7 @@ first_part = parts.join('.')
 current_address = pair.first.to_i
 current_port = pair.last.to_i
 for i in 0...options.number_of_entries do
-    output["#{first_part}.#{current_address}:#{current_port}"] = {
+    data["#{first_part}.#{current_address}:#{current_port}"] = {
 	latitude: rand * 90 * (rand > 0.5 ? 1 : -1),
 	    longitude: rand * 180 * (rand > 0.5 ? 1 : -1)
     }
@@ -59,11 +59,13 @@ for i in 0...options.number_of_entries do
     current_port += 1 
 end
 
-data = JSON.pretty_generate output
+output = JSON.pretty_generate data
 
-puts data
+puts output
 
-File.open(RELAY_DATA_FILENAME, 'w') do |file|
-    file.write(data)
+unless data.empty?
+    File.open(RELAY_DATA_FILENAME, 'w') do |file|
+	file.write(output)
+    end
 end
 
