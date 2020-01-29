@@ -1,19 +1,20 @@
-#include <spec.hpp>
+#include <cspec.hpp>
 #include <clock.hpp>
 #include <thread>
 
 using namespace std::chrono_literals;
 
-BeginSpec(Clock);
-Describe("class Clock", [] {
-    Context("waiting 1 second", [] {
-        It("waits", [] {
-            epoch::Clock clock;
-            clock.reset();
-            std::this_thread::sleep_for(1s);
-            Expect(clock.elapsed<epoch::Second>(1)).toEqual(true);
+Eval(Clock)
+{
+    Describe("class Clock", [] {
+        Context("waiting 1 second", [] {
+            It("waits", [] {
+                epoch::Clock clock;
+                clock.reset();
+                std::this_thread::sleep_for(1s);
+                Expect(clock.elapsed<epoch::Second>(1)).toEqual(true);
+            });
         });
     });
-});
-EndSpec();
+}
 
