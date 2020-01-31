@@ -149,7 +149,7 @@ elsif ARGV.length > 0
 
     for port in start_port..end_port do
 	puts "Adding relay 127.0.0.1:#{port}"
-	command_str = "RELAY_ADDRESS='127.0.0.1:#{port}' $(pwd)/dist/relay > /dev/null & echo $! >> #{RELAY_PIDS_FILENAME}"
+	command_str = "RELAY_ADDRESS='127.0.0.1:#{port}' $(pwd)/cmd/relay/bin/relay > /dev/null & echo $! >> #{RELAY_PIDS_FILENAME}"
 	system("/bin/bash -c '#{command_str}'")
     end
 end
