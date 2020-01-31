@@ -6,11 +6,15 @@
 #include <istream>
 #include <sstream>
 #include <iterator>
+#include <iostream>
 
 namespace sys
 {
     struct Opt
     {
+        std::string SName;
+        std::string LName;
+        std::string ArgName;
         std::string Desc;
         std::function<void(bool)> OnFindBool;
         std::function<void(std::string)> OnFindStr;
@@ -33,7 +37,8 @@ namespace sys
         bool isAdvancedOpt(
             std::string s_name, std::string l_name, std::string& new_s_name, std::string& new_l_name, std::string& argument);
 
-            private : std::unordered_map<std::string, std::shared_ptr<Opt>> mShortNames;
+       private:
+        std::unordered_map<std::string, std::shared_ptr<Opt>> mShortNames;
         std::unordered_map<std::string, std::shared_ptr<Opt>> mLongNames;
     };
 
@@ -110,15 +115,27 @@ namespace sys
 
     inline void Options::on(std::string s_name, std::string l_name, std::string desc, std::function<void(std::string)> onfind)
     {
-        auto opt = std::make_shared<Opt>();
-        opt->Desc = desc;
-        opt->OnFindStr = onfind;
-        mShortNames[s_name] = opt;
-        mLongNames[l_name] = opt;
+        std::string new_s_name, new_l_name, arg;
+        if (isAdvancedOpt(s_name, l_name, new_s_name, new_l_name, arg)) {
+            auto opt = std::make_shared<Opt>();
+            opt->Desc = desc;
+            opt->OnFindStr = onfind;
+            opt->Advanced = true;
+            mShortNames[new_s_name] = opt;
+            mLongNames[new_l_name] = opt;
+        }
     }
 
     inline void Options::printHelp()
-    {}
+    {
+        std::cout << Banner << '\n';
+
+        for (auto& pair : mShortNames) {
+            auto& opt = pair.second;
+            std::cout << '\t' << opt->SName << ", " << opt->LName << "\t" << opt->Desc
+                      << '\n';  // TODO replace with printf formatting
+        }
+    }
 
     inline std::shared_ptr<Opt> Options::find(std::string name)
     {
@@ -164,6 +181,6 @@ namespace sys
             }
         }
 
-	return false;
+        return false;
     }
 }  // namespace sys
