@@ -161,6 +161,9 @@ Eval(Options)
                 sys::Options opts;
 
                 Expect(opts.isAdvancedOpt(s_name, l_name, new_s_name, new_l_name, arg)).toEqual(false);
+                Expect(new_s_name).toEqual(std::string());
+                Expect(new_l_name).toEqual(std::string());
+                Expect(arg).toEqual(std::string());
             });
         });
         Context("-s [NUMBER], --short", [] {
@@ -169,6 +172,9 @@ Eval(Options)
                 sys::Options opts;
 
                 Expect(opts.isAdvancedOpt(s_name, l_name, new_s_name, new_l_name, arg)).toEqual(true);
+                Expect(new_s_name).toEqual("-s");
+                Expect(new_l_name).toEqual(l_name);
+                Expect(arg).toEqual("[NUMBER]");
             });
         });
         Context("-l , --long [NUMBER]", [] {
@@ -177,6 +183,9 @@ Eval(Options)
                 sys::Options opts;
 
                 Expect(opts.isAdvancedOpt(s_name, l_name, new_s_name, new_l_name, arg)).toEqual(true);
+                Expect(new_s_name).toEqual(s_name);
+                Expect(new_l_name).toEqual("--long");
+                Expect(arg).toEqual("[NUMBER]");
             });
         });
     });
