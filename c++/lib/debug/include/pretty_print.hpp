@@ -3,7 +3,7 @@
 
 namespace debug
 {
-    void DumpHex(const void* data, size_t size)
+    inline void DumpHex(const void* data, size_t size)
     {
         char ascii[17];
         size_t i, j;
