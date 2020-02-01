@@ -54,7 +54,7 @@ SPEC_OBJ_FILES	:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.o, $(SPEC_FILES))
 all: setup $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
 
 .PHONY: setup
-setup: $(SRC) $(INCLUDE) $(SPEC) $(BIN) $(OBJ)
+setup: <%= setup_dirs %>
 
 .PHONY: clean
 clean:
@@ -82,19 +82,7 @@ $(OBJ)/%.o: $(SRC)/%.cpp
 
 $(OBJ)/%.spec.o: $(SPEC)/%.spec.cpp
 	$(CXX) $(CXX_FLAGS) -c $(INCLUDE_DIRS_SPEC) $^ -o $@
-
-$(SRC):
+<% for dir in DIRS %>
+<%= dir %>:
 	@mkdir -p $@
-
-$(INCLUDE):
-	@mkdir -p $@
-
-$(SPEC):
-	@mkdir -p $@
-
-$(BIN):
-	@mkdir -p $@
-
-$(OBJ):
-	@mkdir -p $@
-
+<% end %>
