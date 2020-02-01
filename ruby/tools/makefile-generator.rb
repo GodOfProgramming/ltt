@@ -2,6 +2,7 @@
 require 'optparse'
 require 'ostruct'
 require 'sys_helpers'
+require 'erb'
 
 #######################
 ### Option Parsing ####
@@ -103,122 +104,17 @@ def derive_autogen_commands(opts)
     str = "#{str} #{opts.shared_spec.map{ |s| "--shared-spec #{s}" }.join(' ')}" if opts.shared_spec
 end
 
-MAKEFILE = <<-MAKEFILE
-# #{derive_autogen_commands(options)}
-
-#################
-### Functions ###
-#################
-
-rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d))
-
-#################
-### Variables ###
-#################
-
-EXE			:= #{options.exe}
-EXE_SPEC		:= #{options.exe}.spec
-
-CXX			:= #{options.cxx}
-CXX_FLAGS 		:= #{(options.cxx_flags + DEFAULT_CXX_FLAGS).map{ |f| "-#{f}" }.join(' ')}
-
-SRC			:= src
-INCLUDE			:= include
-SPEC			:= spec
-BIN			:= bin
-OBJ			:= obj
-
-MAIN			:= main
-MAIN_CXX		:= $(MAIN).cxx
-MAIN_OBJ		:= $(MAIN).out
-
-INCLUDE_DIRS		:= #{(options.include + DEFAULT_INCLUDE).map{ |i| "-I#{i}" }.join(' ')}
-INCLUDE_DIRS_SPEC	:= $(INCLUDE_DIRS) #{(options.include_spec + DEFAULT_INCLUDE_SPEC).map{ |i| "-I#{i}" }.join(' ')}
-
-STATIC_LIBS		:= #{options.static.join(' ')}
-STATIC_LIBS_SPEC	:= $(STATIC_LIBS) #{options.static_spec.join(' ')}
-
-SHARED_LIBS		:= #{options.shared.map{ |s| "-l#{s}" }.join(' ')}
-SHARED_LIBS_SPEC	:= $(SHARED_LIBS) #{(options.shared_spec + DEFAULT_SHARED_SPEC).map{ |s| "-l#{s}" }.join(' ')}
-
-LIBRARY_DIRS		:= #{options.library_dirs.map{ |l| "-L#{l}" }.join(' ')}
-LIBRARY_DIRS_SPEC	:= $(LIBRARY_DIRS) #{options.library_dirs_spec.map{ |l| "-L#{l}" }.join(' ')}
-#{
-    if options.install
-	<<-INSTALL 
-INSTALL_DIR		:= #{options.install}\n
-	INSTALL
-    end
-}
-SRC_FILES	:= $(call rwildcard,$(SRC),*.cpp)
-SRC_OBJ_FILES	:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRC_FILES))
-
-SPEC_FILES	:= $(call rwildcard,$(SPEC),*.spec.cpp)
-SPEC_OBJ_FILES	:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.o, $(SPEC_FILES))
-
-################
-### Targets  ###
-################
-
-.PHONY: all
-all: setup $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
-
-.PHONY: setup
-setup: $(SRC) $(INCLUDE) $(SPEC) $(BIN) $(OBJ)
-
-.PHONY: clean
-clean:
-	-rm $(BIN)/* $(OBJ)/*
-
-.PHONY: force
-force: clean all
-#{  
-if options.install 
-    <<-INSTALL
-.PHONY: install
-install:
-	@install $(BIN)/$(EXE) #{options.install}\n
-    INSTALL
-end 
-}
-$(BIN)/$(EXE): $(SRC_OBJ_FILES) $(OBJ)/$(MAIN_OBJ)
-	$(CXX) $(CXX_FLAGS) $(LIBRARY_DIRS) $^ $(STATIC_LIBS) -o $@ $(SHARED_LIBS)
-
-$(BIN)/$(EXE_SPEC): $(SPEC_OBJ_FILES) $(SRC_OBJ_FILES)
-	$(CXX) $(CXX_FLAGS) $(LIBRARY_DIRS_SPEC) $^ $(STATIC_LIBS_SPEC) -o $@ $(SHARED_LIBS_SPEC)
-
-$(OBJ)/$(MAIN_OBJ): $(SRC)/$(MAIN_CXX)
-	$(CXX) $(CXX_FLAGS) -c $(INCLUDE_DIRS) $< -o $(OBJ)/$(MAIN_OBJ)
-
-$(OBJ)/%.o: $(SRC)/%.cpp
-	$(CXX) $(CXX_FLAGS) -c $(INCLUDE_DIRS) $< -o $@
-
-$(OBJ)/%.spec.o: $(SPEC)/%.spec.cpp
-	$(CXX) $(CXX_FLAGS) -c $(INCLUDE_DIRS_SPEC) $< -o $@
-
-$(SRC):
-	@mkdir -p $@
-
-$(INCLUDE):
-	@mkdir -p $@
-
-$(SPEC):
-	@mkdir -p $@
-
-$(BIN):
-	@mkdir -p $@
-
-$(OBJ):
-	@mkdir -p $@
-
-MAKEFILE
+renderer = nil
+File.open("#{__dir__}/makefile-template.erb") do |file|
+    renderer = ERB.new(file.read)
+end
 
 ##############
 ### Output ###
 ##############
 
 File.open("Makefile", "w") do |file|
-    file.write(MAKEFILE)
+    file.write(renderer.result())
 end
 
 puts "Done!"
