@@ -12,10 +12,6 @@ int main(int argc, char* argv[])
 		bool a = false;
 	} options;
 
-	for (int i = 0; i < argc; i++) {
-		std::cout << "argv[" << i << "] = " << argv[i] << '\n';
-	}
-
 	sys::OptionParser(argc,
 	 argv,
 	 [&options](sys::Options& opts) {
