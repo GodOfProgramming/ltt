@@ -53,7 +53,7 @@ namespace sys
 
         std::vector<std::string> parse();
 
-        std::string getFollowupArg(int& indx);
+        std::string getArgValue(int& indx);
 
        private:
         int mArgc;
@@ -83,7 +83,7 @@ namespace sys
                 if (opt->OnFindBool) {
                     opt->OnFindBool(true);
                 } else if (opt->OnFindStr) {
-                    opt->OnFindStr(getFollowupArg(i));
+                    opt->OnFindStr(getArgValue(i));
                 }
             } else {
                 remaining.push_back(arg);
@@ -93,7 +93,7 @@ namespace sys
         return remaining;
     }
 
-    inline std::string OptionParser::getFollowupArg(int& i)
+    inline std::string OptionParser::getArgValue(int& i)
     {
         auto is_short_opt = [](std::string& opt) -> bool { return opt.length() == 2 && opt[0] == '-' && opt[1] != '-'; };
         auto is_long_opt = [](std::string& opt) -> bool { return opt.length() >= 3 && opt[0] == '-' && opt[1] == '-'; };
@@ -140,6 +140,7 @@ namespace sys
             opt->SName = new_s_name;
             opt->LName = new_l_name;
             opt->Advanced = true;
+            opt->ArgName = arg;
             mShortNames[new_s_name] = opt;
             mLongNames[new_l_name] = opt;
         }
@@ -151,14 +152,20 @@ namespace sys
 
         for (auto& pair : mShortNames) {
             auto& opt = pair.second;
-            std::cout << '\t' << opt->SName << ", " << opt->LName;
+            std::cout << '\t' << opt->SName << ", " << opt->LName << ' ' << opt->ArgName;
             std::cout.width(mMaxOptLength - opt->SName.length() - opt->LName.length());
-            std::cout << '\t' << opt->Desc << '\n';  // TODO replace with printf formatting
+            std::cout << '\t' << opt->Desc << '\n';
         }
     }
 
     inline std::shared_ptr<Opt> Options::find(std::string name)
     {
+        eqpos = name.find_first_of('=');
+
+        if (eqpos != std::string::npos) {
+            name = name(0, eqpos);
+        }
+
         if (mShortNames.find(name) != mShortNames.end()) {
             return mShortNames[name];
         }

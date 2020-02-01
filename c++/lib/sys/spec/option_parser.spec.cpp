@@ -51,8 +51,8 @@ Eval(OptionParser)
         });
     });
 
-    Describe("getFollowupArg()", [] {
-        const int argc = 14;
+    Describe("getArgValue()", [] {
+        const int argc = 15;
         const char* const argv[] = {
             "prgm name",
             "--next-is-invalid-short",
@@ -68,6 +68,7 @@ Eval(OptionParser)
             "whitespace-value-1",
             "--whitespace",
             "whitespace-value-2",
+	    "valid value",
             "--last",
         };
         sys::OptionParser parser(argc, argv, [](sys::Options& opts) { (void)opts; });
@@ -76,21 +77,21 @@ Eval(OptionParser)
             Context("invalid value is a short arg", [&] {
                 It("returns an empty string", [&] {
                     int i = 1;
-                    Expect(parser.getFollowupArg(i)).toEqual(std::string());
+                    Expect(parser.getArgValue(i)).toEqual(std::string());
                 });
             });
 
             Context("invalid value is a type1 long arg", [&] {
                 It("returns an empty string", [&] {
                     int i = 3;
-                    Expect(parser.getFollowupArg(i)).toEqual(std::string());
+                    Expect(parser.getArgValue(i)).toEqual(std::string());
                 });
             });
 
             Context("invalid value is a type2 long arg", [&] {
                 It("returns an empty string", [&] {
                     int i = 5;
-                    Expect(parser.getFollowupArg(i)).toEqual(std::string());
+                    Expect(parser.getArgValue(i)).toEqual(std::string());
                 });
             });
         });
@@ -99,13 +100,13 @@ Eval(OptionParser)
             Context("short arg", [&] {
                 It("returns an empty string", [&] {
                     int i = 7;
-                    Expect(parser.getFollowupArg(i)).toEqual(std::string());
+                    Expect(parser.getArgValue(i)).toEqual(std::string());
                 });
             });
             Context("long arg", [&] {
                 It("returns the value after '='", [&] {
                     int i = 8;
-                    Expect(parser.getFollowupArg(i)).toEqual("equal-value");
+                    Expect(parser.getArgValue(i)).toEqual("equal-value");
                 });
             });
         });
@@ -114,13 +115,13 @@ Eval(OptionParser)
             Context("short arg", [&] {
                 It("returns the value after the whitespace", [&] {
                     int i = 10;
-                    Expect(parser.getFollowupArg(i)).toEqual("whitespace-value-1");
+                    Expect(parser.getArgValue(i)).toEqual("whitespace-value-1");
                 });
             });
             Context("long arg", [&] {
                 It("returns the value after the whitespace", [&] {
                     int i = 12;
-                    Expect(parser.getFollowupArg(i)).toEqual("whitespace-value-2");
+                    Expect(parser.getArgValue(i)).toEqual("whitespace-value-2");
                 });
             });
         });
@@ -128,7 +129,7 @@ Eval(OptionParser)
         Context("at end of argument list", [&] {
             It("returns an empty string", [&] {
                 int i = argc - 1;
-                Expect(parser.getFollowupArg(i)).toEqual(std::string());
+                Expect(parser.getArgValue(i)).toEqual(std::string());
             });
         });
     });
