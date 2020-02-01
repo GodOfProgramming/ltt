@@ -11,4 +11,7 @@ OptionParser.new do |opts|
     opts.on('-b', '--barg [BARG]', "another argument") do |v|
 	puts("b = #{v}")
     end
+
+    opts.on('-h', '--hell', 'something') do |v|
+    end
 end.parse!

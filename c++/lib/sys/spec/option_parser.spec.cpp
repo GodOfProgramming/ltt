@@ -189,4 +189,82 @@ Eval(Options)
             });
         });
     });
+
+    Describe("shouldShowHelp()", [] {
+        Context("help opts are not in argv", [] {
+            It("returns false", [] {
+                int argc = 3;
+                const char* const argv[] = {
+                    "program",
+                    "--some-option",
+                    "-a",
+                };
+
+                sys::Options opts;
+
+                Expect(opts.shouldShowHelp(argc, argv)).toEqual(false);
+            });
+        });
+
+        Context("-h is present but overriden", [] {
+            It("returns false", [] {
+                int argc = 2;
+                const char* const argv[] = {
+                    "program",
+                    "-h",
+                };
+
+                sys::Options opts;
+
+                opts.on("-h", "--hello", "stub -h", [](bool v) { (void)v; });
+
+                Expect(opts.shouldShowHelp(argc, argv)).toEqual(false);
+            });
+        });
+
+        Context("--help is present but overriden", [] {
+            It("returns false", [] {
+                int argc = 2;
+                const char* const argv[] = {
+                    "program",
+                    "--help",
+                };
+
+                sys::Options opts;
+
+                opts.on("-x", "--help", "stub --help", [](bool v) { (void)v; });
+
+                Expect(opts.shouldShowHelp(argc, argv)).toEqual(false);
+            });
+        });
+
+        Context("-h is present and not overriden", [] {
+            It("returns true", [] {
+                int argc = 2;
+                const char* const argv[] = {
+                    "program",
+                    "-h",
+                };
+
+                sys::Options opts;
+
+                Expect(opts.shouldShowHelp(argc, argv)).toEqual(true);
+            });
+        });
+
+        Context("--help is present and not overriden", [] {
+            It("returns true", [] {
+                int argc = 2;
+                const char* const argv[] = {
+                    "program",
+                    "--help",
+                };
+
+                sys::Options opts;
+
+                Expect(opts.shouldShowHelp(argc, argv)).toEqual(true);
+            });
+        });
+    });
 }
+

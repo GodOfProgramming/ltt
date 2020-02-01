@@ -37,9 +37,13 @@ namespace sys
         bool isAdvancedOpt(
             std::string s_name, std::string l_name, std::string& new_s_name, std::string& new_l_name, std::string& argument);
 
+        bool shouldShowHelp(int argc, const char* const argv[]);
+
        private:
         std::unordered_map<std::string, std::shared_ptr<Opt>> mShortNames;
         std::unordered_map<std::string, std::shared_ptr<Opt>> mLongNames;
+
+        size_t mMaxOptLength = 0;
     };
 
     class OptionParser
@@ -65,6 +69,11 @@ namespace sys
 
     inline std::vector<std::string> OptionParser::parse()
     {
+        if (mOpts.shouldShowHelp(mArgc, mArgv)) {
+            mOpts.printHelp();
+            std::exit(0);
+        }
+
         std::vector<std::string> remaining;
         for (int i = 1; i < mArgc; i++) {
             std::string arg = mArgv[i];
@@ -106,9 +115,14 @@ namespace sys
 
     inline void Options::on(std::string s_name, std::string l_name, std::string desc, std::function<void(bool)> onfind)
     {
+        if (s_name.length() + l_name.length() > mMaxOptLength) {
+            mMaxOptLength = s_name.length() + l_name.length();
+        }
         auto opt = std::make_shared<Opt>();
         opt->Desc = desc;
         opt->OnFindBool = onfind;
+        opt->SName = s_name;
+        opt->LName = l_name;
         mShortNames[s_name] = opt;
         mLongNames[l_name] = opt;
     }
@@ -117,9 +131,14 @@ namespace sys
     {
         std::string new_s_name, new_l_name, arg;
         if (isAdvancedOpt(s_name, l_name, new_s_name, new_l_name, arg)) {
+            if (new_s_name.length() + new_l_name.length() + arg.length() > mMaxOptLength) {
+                mMaxOptLength = s_name.length() + l_name.length();
+            }
             auto opt = std::make_shared<Opt>();
             opt->Desc = desc;
             opt->OnFindStr = onfind;
+            opt->SName = new_s_name;
+            opt->LName = new_l_name;
             opt->Advanced = true;
             mShortNames[new_s_name] = opt;
             mLongNames[new_l_name] = opt;
@@ -132,8 +151,9 @@ namespace sys
 
         for (auto& pair : mShortNames) {
             auto& opt = pair.second;
-            std::cout << '\t' << opt->SName << ", " << opt->LName << "\t" << opt->Desc
-                      << '\n';  // TODO replace with printf formatting
+            std::cout << '\t' << opt->SName << ", " << opt->LName;
+            std::cout.width(mMaxOptLength - opt->SName.length() - opt->LName.length());
+            std::cout << '\t' << opt->Desc << '\n';  // TODO replace with printf formatting
         }
     }
 
@@ -177,6 +197,25 @@ namespace sys
                 new_s_name = s_name;
                 new_l_name = results[0];
                 argument = results[1];
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    inline bool Options::shouldShowHelp(int argc, const char* const argv[])
+    {
+        std::string s = "-h", l = "--help";
+        bool short_overriden = mShortNames.find(s) != mShortNames.end();
+        bool long_overriden = mLongNames.find(l) != mLongNames.end();
+
+        for (int i = 1; i < argc; i++) {
+            if (s == argv[i] && !short_overriden) {
+                return true;
+            }
+
+            if (l == argv[i] && !long_overriden) {
                 return true;
             }
         }
