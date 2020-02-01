@@ -1,14 +1,15 @@
 #!/bin/ruby
 require 'optparse'
 require 'ostruct'
+require 'sys_helpers'
 
 #######################
 ### Option Parsing ####
 #######################
 
 options = OpenStruct.new
-options.exe = false
-options.cxx = false
+options.exe = SysHelpers.this_dir
+options.cxx = 'g++'
 options.cxx_flags =  []
 options.include = []
 options.include_spec = []
@@ -18,8 +19,8 @@ options.shared = []
 options.shared_spec = []
 options.library_dirs = []
 options.library_dirs_spec = []
+options.install = false
 
-DEFAULT_CXX = 'g++'
 DEFAULT_CXX_FLAGS = ["Wall", "Wextra", "std=c++17", "O3", "march=native", "frename-registers", "funroll-loops"]
 DEFAULT_INCLUDE = [ "include" ]
 DEFAULT_INCLUDE_SPEC = [ "$(CSPEC_INCLUDE)" ]
@@ -69,10 +70,19 @@ OptionParser.new() do |opts|
     opts.on('', "--library-spec [LIB]", "A library directory when building specs") do |v|
 	options.library_dirs_spec.push v
     end
+
+    opts.on('', "--install [DIR]", "Create a target to install to DIR") do |v|
+	options.install = v
+    end
 end.parse!
 
 if !options.exe
     puts "-e, --exe is required"
+    exit 1
+end
+
+if !options.cxx
+    puts "-c, --cxx is required"
     exit 1
 end
 
@@ -109,7 +119,7 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 EXE			:= #{options.exe}
 EXE_SPEC		:= #{options.exe}.spec
 
-CXX			:= #{options.cxx || DEFAULT_CXX}
+CXX			:= #{options.cxx}
 CXX_FLAGS 		:= #{(options.cxx_flags + DEFAULT_CXX_FLAGS).map{ |f| "-#{f}" }.join(' ')}
 
 SRC			:= src
@@ -133,7 +143,13 @@ SHARED_LIBS_SPEC	:= $(SHARED_LIBS) #{(options.shared_spec + DEFAULT_SHARED_SPEC)
 
 LIBRARY_DIRS		:= #{options.library_dirs.map{ |l| "-L#{l}" }.join(' ')}
 LIBRARY_DIRS_SPEC	:= $(LIBRARY_DIRS) #{options.library_dirs_spec.map{ |l| "-L#{l}" }.join(' ')}
-
+#{
+    if options.install
+	<<-INSTALL 
+INSTALL_DIR		:= #{options.install}\n
+	INSTALL
+    end
+}
 SRC_FILES	:= $(call rwildcard,$(SRC),*.cpp)
 SRC_OBJ_FILES	:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRC_FILES))
 
@@ -154,6 +170,17 @@ setup: $(SRC) $(INCLUDE) $(SPEC) $(BIN) $(OBJ)
 clean:
 	-rm $(BIN)/* $(OBJ)/*
 
+.PHONY: force
+force: clean all
+#{  
+if options.install 
+    <<-INSTALL
+.PHONY: install
+install:
+	@install $(BIN)/$(EXE) #{options.install}\n
+    INSTALL
+end 
+}
 $(BIN)/$(EXE): $(SRC_OBJ_FILES) $(OBJ)/$(MAIN_OBJ)
 	$(CXX) $(CXX_FLAGS) $(LIBRARY_DIRS) $^ $(STATIC_LIBS) -o $@ $(SHARED_LIBS)
 
