@@ -14,7 +14,7 @@ CXX_FLAGS 		:= -Wall -Wextra -std=c++17 -O3 -march=native -frename-registers -fu
 SRC			:= src
 BIN			:= bin
 
-INCLUDE_DIRS		:= $(MAKE_INCLUDE_ONEOFFS)
+INCLUDE_DIRS		:= $(MAKE_INCLUDE_HELPER)
 
 ################
 ### Targets  ###
