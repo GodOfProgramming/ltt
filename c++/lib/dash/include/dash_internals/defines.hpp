@@ -34,7 +34,7 @@
 
 #define CASE_HELPER(ec, e) \
 	case ec::e: \
-	os << Console::Opt<ec::e>(); \
+	os << tostr<ec, ec::e>().value; \
 	break
 
 #define FG_CASE_HELPER(mod) CASE_HELPER(FG, mod)
