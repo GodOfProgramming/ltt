@@ -177,7 +177,7 @@ namespace sys
 		return nullptr;
 	}
 
-	bool Options::isAdvancedOpt(
+	inline bool Options::isAdvancedOpt(
 	 std::string s_name, std::string l_name, std::string& new_s_name, std::string& new_l_name, std::string& argument)
 	{
 		auto verify_complex_opt = [](std::string opt_name) { return opt_name[0] == '[' && opt_name[opt_name.length() - 1] == ']'; };
