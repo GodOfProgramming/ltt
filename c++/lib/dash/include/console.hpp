@@ -38,13 +38,13 @@
 #define CODE_MISC_BLINK_OFF "\x1b[25m"
 
 #define CASE_HELPER(mod) \
-	case mod: \
-	os << Console::Opt<mod>(); \
+	case Mod:: mod: \
+	os << Console::Opt<Mod:: mod>(); \
 	break
 
 namespace dash
 {
-	enum Mod
+	enum class Mod
 	{
 		/* Forground */
 		FG_Reset,
