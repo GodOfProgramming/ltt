@@ -1,0 +1,9 @@
+g++ -Wall -Wextra -std=c++17 -O3 -march=native -frename-registers -funroll-loops -c -Iinclude -Isrc   src/main.cxx -o obj/main.out
+In file included from src/main.cxx:1:
+include/console.hpp: In static member function ‘static std::string dash::Console::StrTime()’:
+include/console.hpp:55:40: error: ‘timebuf’ was not declared in this scope; did you mean ‘timebuff’?
+   55 |   return std::string(timebuff.begin(), timebuf.begin() + count);
+      |                                        ^~~~~~~
+      |                                        timebuff
+Makefile:81: recipe for target 'obj/main.out' failed
+make: *** [obj/main.out] Error 1
