@@ -71,6 +71,13 @@ install:
 	@echo "Installing into $(INSTALL_DIR)"
 	@install $(BIN)/$(EXE) $(INSTALL_DIR)
 <% end %>
+.PHONY: check
+check: $(BIN)/$(EXE_SPEC)
+	@$^
+	@echo "Passed!"
+
+ci: all check
+
 $(BIN)/$(EXE): $(SRC_OBJ_FILES) $(OBJ)/$(MAIN_OBJ)
 	$(CXX) $(CXX_FLAGS) $(LIBRARY_DIRS) $^ $(STATIC_LIBS) -o $@ $(SHARED_LIBS)
 
