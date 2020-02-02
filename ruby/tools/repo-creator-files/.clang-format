@@ -107,10 +107,9 @@ SpacesInContainerLiterals: true
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 SpacesInSquareBrackets: false
-Standard:        Auto
 TabWidth:        1
 UseTab:          ForIndentation
 SpaceBeforeCtorInitializerColon: false
 SpaceBeforeInheritanceColon: false
-Standard: Latest
+Standard: Auto
 ...

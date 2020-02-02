@@ -22,6 +22,9 @@ SPEC				:= spec
 BIN					:= bin
 OBJ					:= obj
 
+SUB_DIRS			:= $(shell find $(SRC)/* -type d -print)
+OBJ_DIRS			:= $(patsubst $(SRC)/%, $(OBJ)/%, $(SUB_DIRS))
+
 MAIN				:= main
 MAIN_CXX			:= $(MAIN).cxx
 MAIN_OBJ			:= $(MAIN).out
@@ -54,7 +57,7 @@ SPEC_OBJ_FILES		:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.o, $(SPEC_FILES)
 all: setup $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
 
 .PHONY: setup
-setup: <%= setup_dirs %>
+setup: <%= setup_dirs %> $(OBJ_DIRS)
 
 .PHONY: clean
 clean:
