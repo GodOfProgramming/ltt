@@ -58,7 +58,7 @@ setup: <%= setup_dirs %>
 
 .PHONY: clean
 clean:
-	-rm $(BIN)/* $(OBJ)/*
+	-rm -rf $(BIN)/* $(OBJ)/*
 
 .PHONY: force
 force: clean all
