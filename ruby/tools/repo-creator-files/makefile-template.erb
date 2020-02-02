@@ -29,17 +29,17 @@ MAIN				:= main
 MAIN_CXX			:= $(MAIN).cxx
 MAIN_OBJ			:= $(MAIN).out
 
-INCLUDE_DIRS		:= <%= (options.include + DEFAULT_INCLUDE).map{ |i| "-I#{i}" }.join(' ') %> <%= use_ltt?(options) %>
-INCLUDE_DIRS_SPEC	:= $(INCLUDE_DIRS) <%= (options.include_spec + DEFAULT_INCLUDE_SPEC).map{ |i| "-I#{i}" }.join(' ') %>
+INCLUDE_DIRS		:= -I$(INCLUDE) -I$(SRC) <%= options.include.map{ |i| "-I#{i}" }.join(' ') unless options.include.empty? %> <%= use_ltt?(options) %>
+INCLUDE_DIRS_SPEC	:= $(INCLUDE_DIRS) $(CSPEC_INCLUDE) <%= options.include_spec.map{ |i| "-I#{i}" }.join(' ') unless options.include_spec.empty? %>
 
-STATIC_LIBS			:= <%= options.static.join(' ') %>
-STATIC_LIBS_SPEC	:= $(STATIC_LIBS) <%= options.static_spec.join(' ') %>
+STATIC_LIBS			:= <%= options.static.join(' ') unless options.static.empty? %>
+STATIC_LIBS_SPEC	:= $(STATIC_LIBS) <%= options.static_spec.join(' ') unless options.static_spec.empty? %>
 
-SHARED_LIBS			:= <%= options.shared.map{ |s| "-l#{s}" }.join(' ') %>
-SHARED_LIBS_SPEC	:= $(SHARED_LIBS) <%= (options.shared_spec + DEFAULT_SHARED_SPEC).map{ |s| "-l#{s}" }.join(' ') %>
+SHARED_LIBS			:= <%= options.shared.map{ |s| "-l#{s}" }.join(' ') unless options.shared.empty? %>
+SHARED_LIBS_SPEC	:= $(SHARED_LIBS) -lcspec <%= options.shared_spec.map{ |s| "-l#{s}" }.join(' ') unless options.shared_spec.empty? %>
 
-LIBRARY_DIRS		:= <%= options.library_dirs.map{ |l| "-L#{l}" }.join(' ') %>
-LIBRARY_DIRS_SPEC	:= $(LIBRARY_DIRS) <%= options.library_dirs_spec.map{ |l| "-L#{l}" }.join(' ') %>
+LIBRARY_DIRS		:= <%= options.library_dirs.map{ |l| "-L#{l}" }.join(' ') unless options.library_dirs.empty? %>
+LIBRARY_DIRS_SPEC	:= $(LIBRARY_DIRS) <%= options.library_dirs_spec.map{ |l| "-L#{l}" }.join(' ') unless options.library_dirs_spec.empty? %>
 <% if options.install %>
 INSTALL_DIR			:= <%= options.install %>
 <% end %>
