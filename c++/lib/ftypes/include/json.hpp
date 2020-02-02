@@ -1,9 +1,12 @@
 #pragma once
 #include <sstream>
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
 #include <rapidjson/writer.h>
+#pragma GCC diagnostic pop
 
 #define JSON_GET(json, storage, ...) storage = json.get<decltype(storage)>(__VA_ARGS__)
 
