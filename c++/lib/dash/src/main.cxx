@@ -4,10 +4,10 @@ int main()
 {
     dash::Console console;
     console.write(
-		dash::Mod::FG_Cyan,
+		dash::FG::Cyan,
         "foo",
-		dash::Mod::FG_Black,
-        dash::Mod::BG_White,
+		dash::FG::Black,
+        dash::BG::White,
         "bar",
         '\n');
 

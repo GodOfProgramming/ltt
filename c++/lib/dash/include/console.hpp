@@ -37,54 +37,82 @@
 #define CODE_MISC_SLOWBLINK "\x1b[5m"
 #define CODE_MISC_BLINK_OFF "\x1b[25m"
 
-#define CASE_HELPER(mod) \
-	case Mod:: mod: \
-	os << Console::Opt<Mod:: mod>(); \
+#define CASE_HELPER(ec, e) \
+	case ec::e: \
+	os << Console::Opt<ec::e>(); \
 	break
+
+#define FG_CASE_HELPER(mod) CASE_HELPER(FG, mod)
+#define BG_CASE_HELPER(mod) CASE_HELPER(BG, mod)
+#define FS_CASE_HELPER(mod) CASE_HELPER(FS, mod)
+#define M_CASE_HELPER(mod) CASE_HELPER(M, mod)
 
 namespace dash
 {
-	enum class Mod
-	{
-		/* Forground */
-		FG_Reset,
-		FG_Black,
-		FG_Red,
-		FG_Green,
-		FG_Yellow,
-		FG_Blue,
-		FG_Magenta,
-		FG_Cyan,
-		FG_White,
-
-		/* Background */
-		BG_Reset,
-		BG_Black,
-		BG_Red,
-		BG_Green,
-		BG_Yellow,
-		BG_Blue,
-		BG_Magenta,
-		BG_Cyan,
-		BG_White,
-
-		/* Font Style */
-		FS_Bold,
-		FS_Faint,
-		FS_Italic,
-		FS_Underline,
-		FS_UnderlineOff,
-		FS_CrossedOut,
-		FS_CrossedOutOff,
-
-		/* Misc */
-		M_FullReset,
-		M_SlowBlink,
-		M_BlinkOff
+	/* Forground */
+	enum class FG {
+		Reset,
+		Black,
+		Red,
+		Green,
+		Yellow,
+		Blue,
+		Magenta,
+		Cyan,
+		White,
 	};
 
-	template <Mod E>
-		struct tostr
+	/* Background */
+	enum class BG {
+		Reset,
+		Black,
+		Red,
+		Green,
+		Yellow,
+		Blue,
+		Magenta,
+		Cyan,
+		White,
+	};
+
+	/* Font Style */
+	enum class FS {
+		Bold,
+		Faint,
+		Italic,
+		Underline,
+		UnderlineOff,
+		CrossedOut,
+		CrossedOutOff,
+	};
+
+	/* Misc */
+	enum class M {
+		FullReset,
+		SlowBlink,
+		BlinkOff
+	};
+
+	template <FG E>
+		struct fg_tostr
+		{
+			const char* const value = nullptr;
+		};
+
+	template <BG E>
+		struct bg_tostr
+		{
+			const char* const value = nullptr;
+		};
+
+	template <FS E>
+		struct fs_tostr
+		{
+			const char* const value = nullptr;
+		};
+
+	template <M E>
+		struct m_tostr
 		{
 			const char* const value = nullptr;
 		};
@@ -94,17 +122,35 @@ namespace dash
 		public:
 			Console() = default;
 
-			template <Mod E>
+			template <FG E>
 				constexpr static inline const char* Opt()
 				{
-					return tostr<E>().value;
+					return fg_tostr<E>().value;
+				}
+
+			template <BG E>
+				constexpr static inline const char* Opt()
+				{
+					return bg_tostr<E>().value;
+				}
+
+			template <FS E>
+				constexpr static inline const char* Opt()
+				{
+					return fs_tostr<E>().value;
+				}
+
+			template <M E>
+				constexpr static inline const char* Opt()
+				{
+					return m_tostr<E>().value;
 				}
 
 			template <typename... Args>
 				void write(Args&&... args)
 				{
 					mLock.lock();
-					((std::cout << std::forward<Args>(args)), ...) << Opt<Mod::M_FullReset>();
+					((std::cout << std::forward<Args>(args)), ...) << Opt<M::FullReset>();
 					mLock.unlock();
 				}
 
@@ -137,213 +183,228 @@ namespace dash
 
 	/* Forground */
 	template <>
-		struct tostr<Mod::FG_Reset>
+		struct fg_tostr<FG::Reset>
 		{
 			const char* const value = CODE_FORGROUND_RESET;
 		};
 
 	template <>
-		struct tostr<Mod::FG_Black>
+		struct fg_tostr<FG::Black>
 		{
 			const char* const value = CODE_FORGROUND_BLACK;
 		};
 
 	template <>
-		struct tostr<Mod::FG_Red>
+		struct fg_tostr<FG::Red>
 		{
 			const char* const value = CODE_FORGROUND_RED;
 		};
 
 	template <>
-		struct tostr<Mod::FG_Green>
+		struct fg_tostr<FG::Green>
 		{
 			const char* const value = CODE_FORGROUND_GREEN;
 		};
 
 	template <>
-		struct tostr<Mod::FG_Yellow>
+		struct fg_tostr<FG::Yellow>
 		{
 			const char* const value = CODE_FORGROUND_YELLOW;
 		};
 
 	template <>
-		struct tostr<Mod::FG_Blue>
+		struct fg_tostr<FG::Blue>
 		{
 			const char* const value = CODE_FORGROUND_BLUE;
 		};
 
 	template <>
-		struct tostr<Mod::FG_Magenta>
+		struct fg_tostr<FG::Magenta>
 		{
 			const char* const value = CODE_FORGROUND_MAGENTA;
 		};
 
 	template <>
-		struct tostr<Mod::FG_Cyan>
+		struct fg_tostr<FG::Cyan>
 		{
 			const char* const value = CODE_FORGROUND_CYAN;
 		};
 
 	template <>
-		struct tostr<Mod::FG_White>
+		struct fg_tostr<FG::White>
 		{
 			const char* const value = CODE_FORGROUND_WHITE;
 		};
 
 	/* Background */
 	template <>
-		struct tostr<Mod::BG_Reset>
+		struct bg_tostr<BG::Reset>
 		{
 			const char* const value = CODE_BACKGROUND_RESET;
 		};
 
 	template <>
-		struct tostr<Mod::BG_Black>
+		struct bg_tostr<BG::Black>
 		{
 			const char* const value = CODE_BACKGROUND_BLACK;
 		};
 
 	template <>
-		struct tostr<Mod::BG_Red>
+		struct bg_tostr<BG::Red>
 		{
 			const char* const value = CODE_BACKGROUND_RED;
 		};
 
 	template <>
-		struct tostr<Mod::BG_Green>
+		struct bg_tostr<BG::Green>
 		{
 			const char* const value = CODE_BACKGROUND_GREEN;
 		};
 
 	template <>
-		struct tostr<Mod::BG_Yellow>
+		struct bg_tostr<BG::Yellow>
 		{
 			const char* const value = CODE_BACKGROUND_YELLOW;
 		};
 
 	template <>
-		struct tostr<Mod::BG_Blue>
+		struct bg_tostr<BG::Blue>
 		{
 			const char* const value = CODE_BACKGROUND_BLUE;
 		};
 
 	template <>
-		struct tostr<Mod::BG_Magenta>
+		struct bg_tostr<BG::Magenta>
 		{
 			const char* const value = CODE_BACKGROUND_MAGENTA;
 		};
 
 	template <>
-		struct tostr<Mod::BG_Cyan>
+		struct bg_tostr<BG::Cyan>
 		{
 			const char* const value = CODE_BACKGROUND_CYAN;
 		};
 
 	template <>
-		struct tostr<Mod::BG_White>
+		struct bg_tostr<BG::White>
 		{
 			const char* const value = CODE_BACKGROUND_WHITE;
 		};
 
 	/* Font styles */
 	template <>
-		struct tostr<Mod::FS_Bold>
+		struct fs_tostr<FS::Bold>
 		{
 			const char* const value = CODE_FONTSTYLE_BOLD;
 		};
 
 	template <>
-		struct tostr<Mod::FS_Faint>
+		struct fs_tostr<FS::Faint>
 		{
 			const char* const value = CODE_FONTSTYLE_FAINT;
 		};
 
 	template <>
-		struct tostr<Mod::FS_Italic>
+		struct fs_tostr<FS::Italic>
 		{
 			const char* const value = CODE_FONTSTYLE_ITALIC;
 		};
 
 	template <>
-		struct tostr<Mod::FS_Underline>
+		struct fs_tostr<FS::Underline>
 		{
 			const char* const value = CODE_FONTSTYLE_UNDERLINE;
 		};
 
 	template <>
-		struct tostr<Mod::FS_UnderlineOff>
+		struct fs_tostr<FS::UnderlineOff>
 		{
 			const char* const value = CODE_FONTSTYLE_UNDERLINE_OFF;
 		};
 
 	template <>
-		struct tostr<Mod::FS_CrossedOut>
+		struct fs_tostr<FS::CrossedOut>
 		{
 			const char* const value = CODE_FONTSTYLE_CROSSEDOUT;
 		};
 
 	template <>
-		struct tostr<Mod::FS_CrossedOutOff>
+		struct fs_tostr<FS::CrossedOutOff>
 		{
 			const char* const value = CODE_FONTSTYLE_CROSSEDOUT_OFF;
 		};
 
 	/* Misc */
 	template <>
-		struct tostr<Mod::M_FullReset>
+		struct m_tostr<M::FullReset>
 		{
 			const char* const value = CODE_MISC_FULLRESET;
 		};
 
 	template <>
-		struct tostr<Mod::M_SlowBlink>
+		struct m_tostr<M::SlowBlink>
 		{
 			const char* const value = CODE_MISC_SLOWBLINK;
 		};
 
 	template <>
-		struct tostr<Mod::M_BlinkOff>
+		struct m_tostr<M::BlinkOff>
 		{
 			const char* const value = CODE_MISC_BLINK_OFF;
 		};
 
-	inline std::ostream& operator<<(std::ostream& os, Mod m) {
+	inline std::ostream& operator<<(std::ostream& os, FG m) {
 		switch(m) {
 			/* Forground */
-			CASE_HELPER(FG_Reset);
-			CASE_HELPER(FG_Black);
-			CASE_HELPER(FG_Red);
-			CASE_HELPER(FG_Green);
-			CASE_HELPER(FG_Yellow);
-			CASE_HELPER(FG_Blue);
-			CASE_HELPER(FG_Magenta);
-			CASE_HELPER(FG_Cyan);
-			CASE_HELPER(FG_White);
+			FG_CASE_HELPER(Reset);
+			FG_CASE_HELPER(Black);
+			FG_CASE_HELPER(Red);
+			FG_CASE_HELPER(Green);
+			FG_CASE_HELPER(Yellow);
+			FG_CASE_HELPER(Blue);
+			FG_CASE_HELPER(Magenta);
+			FG_CASE_HELPER(Cyan);
+			FG_CASE_HELPER(White);
+		}
+		return os;
+	}
 
+	inline std::ostream& operator<<(std::ostream& os, BG m) {
+		switch(m) {
 			/* Background */
-			CASE_HELPER(BG_Reset);
-			CASE_HELPER(BG_Black);
-			CASE_HELPER(BG_Red);
-			CASE_HELPER(BG_Green);
-			CASE_HELPER(BG_Yellow);
-			CASE_HELPER(BG_Blue);
-			CASE_HELPER(BG_Magenta);
-			CASE_HELPER(BG_Cyan);
-			CASE_HELPER(BG_White);
+			BG_CASE_HELPER(Reset);
+			BG_CASE_HELPER(Black);
+			BG_CASE_HELPER(Red);
+			BG_CASE_HELPER(Green);
+			BG_CASE_HELPER(Yellow);
+			BG_CASE_HELPER(Blue);
+			BG_CASE_HELPER(Magenta);
+			BG_CASE_HELPER(Cyan);
+			BG_CASE_HELPER(White);
+		}
+		return os;
+	}
 
+	inline std::ostream& operator<<(std::ostream& os, FS m) {
+		switch(m) {
 			/* Font Style */
-			CASE_HELPER(FS_Bold);
-			CASE_HELPER(FS_Faint);
-			CASE_HELPER(FS_Italic);
-			CASE_HELPER(FS_Underline);
-			CASE_HELPER(FS_UnderlineOff);
-			CASE_HELPER(FS_CrossedOut);
-			CASE_HELPER(FS_CrossedOutOff);
+			FS_CASE_HELPER(Bold);
+			FS_CASE_HELPER(Faint);
+			FS_CASE_HELPER(Italic);
+			FS_CASE_HELPER(Underline);
+			FS_CASE_HELPER(UnderlineOff);
+			FS_CASE_HELPER(CrossedOut);
+			FS_CASE_HELPER(CrossedOutOff);
+		}
+		return os;
+	}
 
+	inline std::ostream& operator<<(std::ostream& os, M m) {
+		switch(m) {
 			/* Misc */
-			CASE_HELPER(M_FullReset);
-			CASE_HELPER(M_SlowBlink);
-			CASE_HELPER(M_BlinkOff);
+			M_CASE_HELPER(FullReset);
+			M_CASE_HELPER(SlowBlink);
+			M_CASE_HELPER(BlinkOff);
 		}
 		return os;
 	}
