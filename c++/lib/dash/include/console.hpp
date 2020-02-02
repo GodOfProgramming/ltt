@@ -3,6 +3,7 @@
 #include <string>
 #include <ctime>
 #include <strings.h>
+#include <mutex>
 
 #define CODE_FORGROUND_RESET "\x1b[39m"
 #define CODE_FORGROUND_BLACK "\x1b[30m"
@@ -83,7 +84,7 @@ namespace dash
         Console() = default;
 
         template <Mod E>
-        constexpr inline const char* setOpt()
+        constexpr static inline const char* Opt()
         {
             return tostr<E>().value;
         }
@@ -91,7 +92,9 @@ namespace dash
         template <typename... Args>
         void write(Args&&... args)
         {
-            ((std::cout << std::forward<Args>(args)), ...) << setOpt<Mod::M_FullReset>();
+			mLock.lock();
+            ((std::cout << std::forward<Args>(args)), ...) << Opt<Mod::M_FullReset>();
+			mLock.unlock();
         }
 
         template <typename... Args>
@@ -108,6 +111,7 @@ namespace dash
 
        private:
         static std::string StrTime();
+		std::mutex mLock;
 
         template <Mod E>
         struct tostr

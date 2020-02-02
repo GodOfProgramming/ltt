@@ -3,10 +3,11 @@
 int main()
 {
     dash::Console console;
-    console.write(console.setOpt<dash::Mod::FG_Cyan>(),
+    console.write(
+		dash::Console::Opt<dash::Mod::FG_Cyan>(),
         "foo",
-        console.setOpt<dash::Mod::FG_Black>(),
-        console.setOpt<dash::Mod::BG_White>(),
+        dash::Console::Opt<dash::Mod::FG_Black>(),
+        dash::Console::Opt<dash::Mod::BG_White>(),
         "bar",
         '\n');
 
