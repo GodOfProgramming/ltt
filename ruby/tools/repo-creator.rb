@@ -23,6 +23,7 @@ options.library_dirs = []
 options.library_dirs_spec = []
 options.install = false
 options.use_ltt = false
+options.remake = false
 
 DEFAULT_CXX_FLAGS = ["Wall", "Wextra", "std=c++17", "O3", "march=native", "frename-registers", "funroll-loops"]
 
@@ -37,6 +38,10 @@ OptionParser.new() do |opts|
 
 	opts.on("-f", "--flag [FLAG]", "A cxx flag; Flags must be surrounded in quotes") do |v|
 		options.cxx_flags.push v
+	end
+
+	opts.on("-r", "--remake", "Rerun this script using the settings from the last time") do |v|
+		options.remake = v
 	end
 
 	opts.on('', "--include [INCLUDE]", "An include dir to use") do |v|
@@ -79,6 +84,15 @@ OptionParser.new() do |opts|
 		options.use_ltt = v
 	end
 end.parse!
+
+if options.remake
+	if File.exists? 'Makefile'
+		line1 = File.open('Makefile', &:readline)
+		cmdindx = line1.index /repo-creator.rb/
+		system(line1[cmdindx..-1])
+	end
+	exit 0
+end
 
 if !options.exe
 	puts "-e, --exe is required"
