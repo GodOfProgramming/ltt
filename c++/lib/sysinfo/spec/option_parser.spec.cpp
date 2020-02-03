@@ -9,7 +9,7 @@ Eval(OptionParser)
                 bool a_value = false;
                 int argc = 2;
                 const char* const argv[] = { "prgm name", "-a" };
-                sys::OptionParser parser(argc, argv, [&](sys::Options& opts) {
+                info::OptionParser parser(argc, argv, [&](info::Options& opts) {
                     opts.on("-a", "--arg", "test arg", [&](bool v) {
                         if (v) {
                             a_value = true;
@@ -31,7 +31,7 @@ Eval(OptionParser)
                 bool a_value = false;
                 int argc = 4;
                 const char* const argv[] = { "prgm name", "extra-arg-2", "-a", "extra-arg-1" };
-                sys::OptionParser parser(argc, argv, [&](sys::Options& opts) {
+                info::OptionParser parser(argc, argv, [&](info::Options& opts) {
                     opts.on("-a", "--arg", "test arg", [&](bool v) {
                         if (v) {
                             a_value = true;
@@ -71,7 +71,7 @@ Eval(OptionParser)
 	    "valid value",
             "--last",
         };
-        sys::OptionParser parser(argc, argv, [](sys::Options& opts) { (void)opts; });
+        info::OptionParser parser(argc, argv, [](info::Options& opts) { (void)opts; });
 
         Context("next argument is not a value", [&] {
             Context("invalid value is a short arg", [&] {
@@ -140,7 +140,7 @@ Eval(Options)
     Describe("on()", [] {
         Context("adding a basic argument", [] {
             It("can find the short and long versions", [] {
-                sys::Options opts;
+                info::Options opts;
                 bool arg_val = false;
 
                 opts.on("-a", "--a", "test arg", [&](bool v) { arg_val = v; });
@@ -159,7 +159,7 @@ Eval(Options)
         Context("-i, --invalid", [] {
             It("returns false with no new values", [] {
                 std::string s_name = "-i", l_name = "--invalid", new_s_name, new_l_name, arg;
-                sys::Options opts;
+                info::Options opts;
 
                 Expect(opts.isAdvancedOpt(s_name, l_name, new_s_name, new_l_name, arg)).toEqual(false);
                 Expect(new_s_name).toEqual(std::string());
@@ -170,7 +170,7 @@ Eval(Options)
         Context("-s [NUMBER], --short", [] {
             It("returns true with the correct new args", [] {
                 std::string s_name = "-s [NUMBER]", l_name = "--short", new_s_name, new_l_name, arg;
-                sys::Options opts;
+                info::Options opts;
 
                 Expect(opts.isAdvancedOpt(s_name, l_name, new_s_name, new_l_name, arg)).toEqual(true);
                 Expect(new_s_name).toEqual("-s");
@@ -181,7 +181,7 @@ Eval(Options)
         Context("-l , --long [NUMBER]", [] {
             It("returns true with the correct new args", [] {
                 std::string s_name = "-l ", l_name = "--long [NUMBER]", new_s_name, new_l_name, arg;
-                sys::Options opts;
+                info::Options opts;
 
                 Expect(opts.isAdvancedOpt(s_name, l_name, new_s_name, new_l_name, arg)).toEqual(true);
                 Expect(new_s_name).toEqual(s_name);
@@ -201,7 +201,7 @@ Eval(Options)
                     "-a",
                 };
 
-                sys::Options opts;
+                info::Options opts;
 
                 Expect(opts.shouldShowHelp(argc, argv)).toEqual(false);
             });
@@ -215,7 +215,7 @@ Eval(Options)
                     "-h",
                 };
 
-                sys::Options opts;
+                info::Options opts;
 
                 opts.on("-h", "--hello", "stub -h", [](bool v) { (void)v; });
 
@@ -231,7 +231,7 @@ Eval(Options)
                     "--help",
                 };
 
-                sys::Options opts;
+                info::Options opts;
 
                 opts.on("-x", "--help", "stub --help", [](bool v) { (void)v; });
 
@@ -247,7 +247,7 @@ Eval(Options)
                     "-h",
                 };
 
-                sys::Options opts;
+                info::Options opts;
 
                 Expect(opts.shouldShowHelp(argc, argv)).toEqual(true);
             });
@@ -261,7 +261,7 @@ Eval(Options)
                     "--help",
                 };
 
-                sys::Options opts;
+                info::Options opts;
 
                 Expect(opts.shouldShowHelp(argc, argv)).toEqual(true);
             });

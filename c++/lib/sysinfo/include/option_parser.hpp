@@ -8,7 +8,7 @@
 #include <iterator>
 #include <iostream>
 
-namespace sys
+namespace info
 {
 	struct Opt
 	{
