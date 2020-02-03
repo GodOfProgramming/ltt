@@ -6,3 +6,5 @@ File.open("#{__dir__}/dir.rb") do |file|
 end
 
 puts str
+
+puts File.basename(__FILE__)
