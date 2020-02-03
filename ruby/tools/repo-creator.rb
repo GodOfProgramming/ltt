@@ -119,8 +119,11 @@ DIRS = [ '$(SRC)', '$(INCLUDE)', '$(SPEC)', '$(BIN)', '$(OBJ)', '$(OBJ_DIRS)' ]
 setup_dirs = DIRS.join(' ')
 
 renderer = nil
-File.open("#{__dir__}/repo-creator-files/makefile-template.erb") do |file|
-	renderer = ERB.new(file.read)
+template = "#{__dir__}/repo-creator-files/template.makefile"
+if File.exists? template
+	File.open(template) do |file|
+		renderer = ERB.new(file.read)
+	end
 end
 
 ##############
