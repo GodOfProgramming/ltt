@@ -42,10 +42,17 @@ LIBRARY_DIRS		:=
 LIBRARY_DIRS_SPEC	:= $(LIBRARY_DIRS) 
 
 SRC_FILES			:= $(call rwildcard,$(SRC),*.cpp)
+
 SRC_OBJ_FILES		:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRC_FILES))
+SRC_DEP_FILES		:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.d, $(SRC_FILES))
 
 SPEC_FILES			:= $(call rwildcard,$(SPEC),*.spec.cpp)
 SPEC_OBJ_FILES		:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.o, $(SPEC_FILES))
+SPEC_DEP_FILES		:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.d, $(SPEC_FILES))
+
+DEPENDENCIES		:= $(SRC_DEP_FILES) $(SPEC_DEP_FILES)
+
+-include $(DEPENDENCIES)
 
 ################
 ### Targets  ###
@@ -66,7 +73,7 @@ force: clean all
 
 .PHONY: check
 check: $(BIN)/$(EXE_SPEC)
-	@$^
+	@$<
 	@echo "Passed!"
 
 ci: all check
@@ -78,13 +85,13 @@ $(BIN)/$(EXE_SPEC): $(SPEC_OBJ_FILES) $(SRC_OBJ_FILES)
 	$(CXX) $(CXX_FLAGS) $(LIBRARY_DIRS_SPEC) $^ $(STATIC_LIBS_SPEC) -o $@ $(SHARED_LIBS_SPEC)
 
 $(OBJ)/$(MAIN_OBJ): $(SRC)/$(MAIN_CXX)
-	$(CXX) $(CXX_FLAGS) -c $(INCLUDE_DIRS) $^ -o $(OBJ)/$(MAIN_OBJ)
+	$(CXX) $(CXX_FLAGS) -c -MMD -MP $(INCLUDE_DIRS) $< -o $(OBJ)/$(MAIN_OBJ)
 
-$(OBJ)/%.o: $(SRC)/%.cpp
-	$(CXX) $(CXX_FLAGS) -c $(INCLUDE_DIRS) $^ -o $@
+$(OBJ)/%.o: $(SRC)/%.cpp Makefile
+	$(CXX) $(CXX_FLAGS) -c -MMD -MP $(INCLUDE_DIRS) $< -o $@
 
-$(OBJ)/%.spec.o: $(SPEC)/%.spec.cpp
-	$(CXX) $(CXX_FLAGS) -c $(INCLUDE_DIRS_SPEC) $^ -o $@
+$(OBJ)/%.spec.o: $(SPEC)/%.spec.cpp Makefile
+	$(CXX) $(CXX_FLAGS) -c -MMD -MP $(INCLUDE_DIRS_SPEC) $< -o $@
 
 $(SRC):
 	@mkdir -p $@
