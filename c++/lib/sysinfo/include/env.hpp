@@ -4,7 +4,7 @@
 
 extern char** environ;
 
-namespace info
+namespace sysinfo
 {
 	class Env: public std::unordered_map<std::string, std::string>
 	{
