@@ -11,55 +11,55 @@ namespace dash
 {
 	class Console
 	{
-		public:
-			Console(std::ostream& stream = std::cout);
+	public:
+		Console(std::ostream& stream = std::cout);
 
-			template <auto E>
-				static constexpr const char* Opt();
+		template <auto E>
+		static constexpr const char* Opt();
 
-			template <typename... Args>
-				void write(Args&&... args);
+		template <typename... Args>
+		void write(Args&&... args);
 
-			template <typename... Args>
-				void writeLine(Args&&... args);
+		template <typename... Args>
+		void writeLine(Args&&... args);
 
-			template <typename... Args>
-				void log(Args&&... args);
+		template <typename... Args>
+		void log(Args&&... args);
 
-		private:
-			std::ostream& mStream;
-			std::mutex mLock;
+	private:
+		std::ostream& mStream;
+		std::mutex mLock;
 
-			static std::string StrTime();
+		static std::string StrTime();
 	};
 
-	inline Console::Console(std::ostream& stream) : mStream(stream) {}
+	inline Console::Console(std::ostream& stream): mStream(stream) {}
 
 	template <auto E>
-		constexpr const char* Console::Opt()
-		{
-			return tostr<decltype(E), E>().value;
-		}
-
-	template<typename... Args>
-		void Console::write(Args&&... args)
-		{
-			mLock.lock();
-			((mStream << std::forward<Args>(args)), ...) << Opt<M::FullReset>();
-			mLock.unlock();
-		}
+	constexpr const char* Console::Opt()
+	{
+		return tostr<decltype(E), E>().value;
+	}
 
 	template <typename... Args>
-		void Console::writeLine(Args&&... args)
-		{
-			write(args..., '\n');
-		}
+	void Console::write(Args&&... args)
+	{
+		mLock.lock();
+		((mStream << std::forward<Args>(args)), ...) << Opt<M::FullReset>();
+		mLock.unlock();
+	}
 
 	template <typename... Args>
-		void Console::log(Args&&... args)
-		{
-			writeLine('[', StrTime(), "] ", args...);
-		}
+	void Console::writeLine(Args&&... args)
+	{
+		write(args..., '\n');
+	}
+
+	template <typename... Args>
+	void Console::log(Args&&... args)
+	{
+		writeLine('[', StrTime(), "] ", args...);
+	}
 
 	inline std::string Console::StrTime()
 	{
