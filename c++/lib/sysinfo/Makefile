@@ -52,6 +52,9 @@ SPEC_DEP_FILES		:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.d, $(SPEC_FILES)
 
 DEPENDENCIES		:= $(SRC_DEP_FILES) $(SPEC_DEP_FILES)
 
+OBJECTS				:= $(SRC_OBJ_FILES) $(SPEC_OBJ_FILES)
+EXECUTABLES			:= $(EXE) $(EXE_SPEC)
+
 -include $(DEPENDENCIES)
 
 ################
@@ -66,7 +69,7 @@ setup: $(SRC) $(INCLUDE) $(SPEC) $(BIN) $(OBJ) $(OBJ_DIRS) $(OBJ_DIRS)
 
 .PHONY: clean
 clean:
-	-rm -rf $(BIN)/* $(OBJ)/*
+	-rm -rf $(EXECUTABLES) $(OBJECTS)
 
 .PHONY: force
 force: clean all

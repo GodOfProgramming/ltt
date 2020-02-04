@@ -12,9 +12,9 @@ int main(int argc, char* argv[])
 		bool a = false;
 	} options;
 
-	info::OptionParser(argc,
+	sysinfo::OptionParser(argc,
 	 argv,
-	 [&options](info::Options& opts) {
+	 [&options](sysinfo::Options& opts) {
 		 opts.Banner = "This is just a test program";
 		 opts.on("-a", "--arg", "simple arg", [&options](bool v) { options.a = v; });
 		 opts.on("-v", "--very-long-opt", "simple arg", [&options](bool v) { (void)v; });
