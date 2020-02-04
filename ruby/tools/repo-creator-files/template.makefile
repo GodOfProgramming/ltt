@@ -57,8 +57,6 @@ DEPENDENCIES		:= $(SRC_DEP_FILES) $(SPEC_DEP_FILES)
 OBJECTS				:= $(SRC_OBJ_FILES) $(SPEC_OBJ_FILES)
 EXECUTABLES			:= $(EXE) $(EXE_SPEC)
 
--include $(DEPENDENCIES)
-
 ################
 ### Targets  ###
 ################
@@ -66,8 +64,10 @@ EXECUTABLES			:= $(EXE) $(EXE_SPEC)
 .PHONY: all
 all: setup $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
 
+-include $(DEPENDENCIES)
+
 .PHONY: setup
-setup: <%= setup_dirs %> $(OBJ_DIRS)
+setup: <%= setup_dirs %>
 
 .PHONY: clean
 clean:
