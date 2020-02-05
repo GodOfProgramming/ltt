@@ -8,7 +8,11 @@ namespace math
 {
 	/* Stein's algo */
 	template <typename T, class = typename std::enable_if<std::is_unsigned<T>::value>::type>
-	T GCD(T x, T y);
+	T GCDS(T x, T y);
+
+	/* Euclidian algo */
+	template <typename T1, typename T2>
+	long GCDE(T1 x, T2 y);
 
 	/* Returns the input as a fraction */
 	std::tuple<long, long> Frac(double input, unsigned long precision = 100000000);
@@ -51,6 +55,17 @@ namespace math
 		} while (y != 0);
 
 		return x << shift;
+	}
+
+	template <typename T1, typename T2>
+	long GCD(T1 x, T2 y)
+	{
+		while (y != 0) {
+			auto t = y;
+			y = x % y;
+			x = t;
+		}
+		return x;
 	}
 
 	inline std::tuple<long, long> Frac(double input, unsigned long precision)
