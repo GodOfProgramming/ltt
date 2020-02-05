@@ -65,10 +65,12 @@ EXECUTABLES			:= $(EXE) $(EXE_SPEC)
 all: setup $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
 
 .PHONY: run-tests
-	$(BIN)/$(EXE_SPEC)
+run-tests: $(BIN)/$(EXE_SPEC)
+	@$<
 
 .PHONY: run-benchmarks
-	$(BIN)/$(EXE_SPEC) --no-eval --bench
+run-benchmarks: $(BIN)/$(EXE_SPEC)
+	@$< --no-eval --bench
 
 .PHONY: setup
 setup: <%= setup_dirs %>

@@ -42,6 +42,7 @@ LIBRARY_DIRS		:=
 LIBRARY_DIRS_SPEC	:= $(LIBRARY_DIRS) 
 
 SRC_FILES			:= $(call rwildcard,$(SRC),*.cpp)
+
 SRC_OBJ_FILES		:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRC_FILES))
 SRC_DEP_FILES		:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.d, $(SRC_FILES))
 
@@ -61,7 +62,13 @@ EXECUTABLES			:= $(EXE) $(EXE_SPEC)
 .PHONY: all
 all: setup $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
 
--include $(DEPENDENCIES)
+.PHONY: run-tests
+run-tests: $(BIN)/$(EXE_SPEC)
+	@$<
+
+.PHONY: run-benchmarks
+run-benchmarks: $(BIN)/$(EXE_SPEC)
+	@$< --no-eval --bench
 
 .PHONY: setup
 setup: $(SRC) $(INCLUDE) $(SPEC) $(BIN) $(OBJ) $(OBJ_DIRS)
@@ -78,7 +85,10 @@ check: $(BIN)/$(EXE_SPEC)
 	@$<
 	@echo "Passed!"
 
+.PHONY: ci
 ci: all check
+
+-include $(DEPENDENCIES)
 
 $(BIN)/$(EXE): $(SRC_OBJ_FILES) $(OBJ)/$(MAIN_OBJ)
 	$(CXX) $(CXX_FLAGS) $(LIBRARY_DIRS) $^ $(STATIC_LIBS) -o $@ $(SHARED_LIBS)
