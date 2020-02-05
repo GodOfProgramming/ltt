@@ -2,47 +2,92 @@
 
 #include <cspec.hpp>
 
-Eval(GCD)
+Eval(SteinsGCD)
 {
 	Describe("x is 0", [] {
 		It("returns y", [] {
-			Expect(math::GCD(0u, 13u)).toEqual(13u);
+			Expect(math::SteinsGCD(0u, 13u)).toEqual(13u);
 		});
 	});
 
 	Describe("y is 0", [] {
 		It("returns x", [] {
-			Expect(math::GCD(13u, 0u)).toEqual(13u);
+			Expect(math::SteinsGCD(13u, 0u)).toEqual(13u);
 		});
 	});
 
 	Describe("x & y are 0", [] {
 		It("returns 0", [] {
-			Expect(math::GCD(0u, 0u)).toEqual(0u);
+			Expect(math::SteinsGCD(0u, 0u)).toEqual(0u);
 		});
 	});
 
 	Describe("100 & 10", [] {
 		It("returns 10", [] {
-			Expect(math::GCD(100u, 10u)).toEqual(10u);
+			Expect(math::SteinsGCD(100u, 10u)).toEqual(10u);
 		});
 	});
 
 	Describe("10 & 100", [] {
 		It("returns 10", [] {
-			Expect(math::GCD(10u, 100u)).toEqual(10u);
+			Expect(math::SteinsGCD(10u, 100u)).toEqual(10u);
 		});
 	});
 
 	Describe("270 & 3830", [] {
 		It("returns 10", [] {
-			Expect(math::GCD(270u, 3830u)).toEqual(10u);
+			Expect(math::SteinsGCD(270u, 3830u)).toEqual(10u);
 		});
 	});
 
 	Describe("384 & 512", [] {
 		It("returns 128", [] {
-			Expect(math::GCD(384u, 512u)).toEqual(128u);
+			Expect(math::SteinsGCD(384u, 512u)).toEqual(128u);
+		});
+	});
+}
+
+Eval(EuclidsGCD)
+{
+	Describe("x is 0", [] {
+		It("returns y", [] {
+			Expect(math::EuclidsGCD(0u, 13u)).toEqual(13u);
+		});
+	});
+
+	Describe("y is 0", [] {
+		It("returns x", [] {
+			Expect(math::EuclidsGCD(13u, 0u)).toEqual(13u);
+		});
+	});
+
+	Describe("x & y are 0", [] {
+		It("returns 0", [] {
+			Expect(math::EuclidsGCD(0u, 0u)).toEqual(0u);
+		});
+	});
+
+	Describe("100 & 10", [] {
+		It("returns 10", [] {
+			Expect(math::EuclidsGCD(100u, 10u)).toEqual(10u);
+		});
+	});
+
+	Describe("10 & 100", [] {
+		It("returns 10", [] {
+			Expect(math::EuclidsGCD(10u, 100u)).toEqual(10u);
+		});
+	});
+
+	Describe("270 & 3830", [] {
+		It("returns 10", [] {
+			Expect(math::EuclidsGCD(270u, 3830u)).toEqual(10u);
+		});
+	});
+
+	Describe("384 & 512", [] {
+		It("returns 128", [] {
+			Expect(math::EuclidsGCD(384u, 512u)).toEqual(128u);
 		});
 	});
 }

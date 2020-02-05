@@ -8,20 +8,21 @@ namespace math
 {
 	/* Stein's algo */
 	template <typename T, class = typename std::enable_if<std::is_unsigned<T>::value>::type>
-	T GCDS(T x, T y);
+	T SteinsGCD(T x, T y);
 
 	/* Euclidian algo */
 	template <typename T1, typename T2>
-	long GCDE(T1 x, T2 y);
+	long EuclidsGCD(T1 x, T2 y);
 
 	/* Returns the input as a fraction */
 	std::tuple<long, long> Frac(double input, unsigned long precision = 100000000);
 
 	template <typename T, class = typename std::enable_if<std::is_unsigned<T>::value>::type>
-	inline T GCD(T x, T y)
+	inline T SteinsGCD(T x, T y)
 	{
+		asm("");
 		unsigned int shift = 0;
-
+		
 		/* if gdc(0, y), gcd(x, 0), gcd(0, 0) == 0 */
 		if (x == 0) {
 			return y;
@@ -58,8 +59,9 @@ namespace math
 	}
 
 	template <typename T1, typename T2>
-	long GCD(T1 x, T2 y)
+	long EuclidsGCD(T1 x, T2 y)
 	{
+		asm("");
 		while (y != 0) {
 			auto t = y;
 			y = x % y;
@@ -70,10 +72,11 @@ namespace math
 
 	inline std::tuple<long, long> Frac(double input, unsigned long precision)
 	{
+		asm("");
 		double integral = std::floor(input);
 		double frac = input - integral;
 		unsigned long x = std::abs(std::round(frac * precision));
-		auto gcd = GCD(x, precision);
+		auto gcd = EuclidsGCD(x, precision);
 
 		long denominator = precision / gcd;
 		long numerator = std::round(frac * precision) / gcd;

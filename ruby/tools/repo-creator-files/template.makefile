@@ -64,7 +64,11 @@ EXECUTABLES			:= $(EXE) $(EXE_SPEC)
 .PHONY: all
 all: setup $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
 
--include $(DEPENDENCIES)
+.PHONY: run-tests
+	$(BIN)/$(EXE_SPEC)
+
+.PHONY: run-benchmarks
+	$(BIN)/$(EXE_SPEC) --no-eval --bench
 
 .PHONY: setup
 setup: <%= setup_dirs %>
@@ -86,7 +90,10 @@ check: $(BIN)/$(EXE_SPEC)
 	@$<
 	@echo "Passed!"
 
+.PHONY: ci
 ci: all check
+
+-include $(DEPENDENCIES)
 
 $(BIN)/$(EXE): $(SRC_OBJ_FILES) $(OBJ)/$(MAIN_OBJ)
 	$(CXX) $(CXX_FLAGS) $(LIBRARY_DIRS) $^ $(STATIC_LIBS) -o $@ $(SHARED_LIBS)

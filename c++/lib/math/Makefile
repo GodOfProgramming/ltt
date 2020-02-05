@@ -42,7 +42,6 @@ LIBRARY_DIRS		:=
 LIBRARY_DIRS_SPEC	:= $(LIBRARY_DIRS) 
 
 SRC_FILES			:= $(call rwildcard,$(SRC),*.cpp)
-
 SRC_OBJ_FILES		:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRC_FILES))
 SRC_DEP_FILES		:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.d, $(SRC_FILES))
 
