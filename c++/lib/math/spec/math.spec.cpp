@@ -103,10 +103,19 @@ Eval(Frac)
 		});
 	});
 
-	Describe("3.0", [] {
-		It("returns 3 / 1", [] {
-			auto actual = math::Frac(3.5);
-			auto expected = std::make_tuple(3u, 1u);
+	Describe("0.25", [] {
+		It("returns 1 / 4", [] {
+			auto actual = math::Frac(0.25);
+			auto expected = std::make_tuple(1u, 4u);
+			Expect(std::get<0>(actual)).toEqual(std::get<0>(expected));
+			Expect(std::get<1>(actual)).toEqual(std::get<1>(expected));
+		});
+	});
+
+	Describe("4.5", [] {
+		It("returns 9 / 1", [] {
+			auto actual = math::Frac(4.5);
+			auto expected = std::make_tuple(9u, 1u);
 			Expect(std::get<0>(actual)).toEqual(std::get<0>(expected));
 			Expect(std::get<1>(actual)).toEqual(std::get<1>(expected));
 		});

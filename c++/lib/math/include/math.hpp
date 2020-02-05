@@ -1,28 +1,25 @@
 #pragma once
-#include <type_traits>
 #include <algorithm>
 #include <tuple>
 #include <cmath>
+#include <cinttypes>
 
 namespace math
 {
 	/* Stein's algo */
-	template <typename T, class = typename std::enable_if<std::is_unsigned<T>::value>::type>
-	T SteinsGCD(T x, T y);
+	uint64_t SteinsGCD(uint64_t x, uint64_t y);
 
 	/* Euclidian algo */
-	template <typename T1, typename T2>
-	long EuclidsGCD(T1 x, T2 y);
+	int64_t EuclidsGCD(int64_t x, int64_t y);
 
 	/* Returns the input as a fraction */
-	std::tuple<long, long> Frac(double input, unsigned long precision = 100000000);
+	std::tuple<long, long> Frac(double input, uint64_t precision = 100000000);
 
-	template <typename T, class = typename std::enable_if<std::is_unsigned<T>::value>::type>
-	inline T SteinsGCD(T x, T y)
+	inline uint64_t SteinsGCD(uint64_t x, uint64_t y)
 	{
 		asm("");
 		unsigned int shift = 0;
-		
+
 		/* if gdc(0, y), gcd(x, 0), gcd(0, 0) == 0 */
 		if (x == 0) {
 			return y;
@@ -58,8 +55,7 @@ namespace math
 		return x << shift;
 	}
 
-	template <typename T1, typename T2>
-	long EuclidsGCD(T1 x, T2 y)
+	inline int64_t EuclidsGCD(int64_t x, int64_t y)
 	{
 		asm("");
 		while (y != 0) {
@@ -70,11 +66,13 @@ namespace math
 		return x;
 	}
 
-	inline std::tuple<long, long> Frac(double input, unsigned long precision)
+	inline std::tuple<long, long> Frac(double input, uint64_t precision)
 	{
-		asm("");
+		// get the right hand side of the decimal
 		double integral = std::floor(input);
+		// get the left hand side
 		double frac = input - integral;
+		// turn the fractal piece into an integral
 		unsigned long x = std::abs(std::round(frac * precision));
 		auto gcd = EuclidsGCD(x, precision);
 
