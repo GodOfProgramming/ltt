@@ -88,8 +88,12 @@ end.parse!
 if options.remake
 	if File.exists? 'Makefile'
 		line1 = File.open('Makefile', &:readline)
-		cmdindx = line1.index /repo-creator.rb/
-		system(line1[cmdindx..-1])
+		cmdstr = line1.split[1..-1].join(' ')
+		puts "Executing: #{cmdstr}"
+		system(cmdstr)
+		puts "remade!"
+	else
+		puts "please generate a Makefile first"
 	end
 	exit 0
 end
@@ -133,7 +137,7 @@ DIRS = [ '$(SRC)', '$(INCLUDE)', '$(SPEC)', '$(BIN)', '$(OBJ)', '$(OBJ_DIRS)' ]
 setup_dirs = DIRS.join(' ')
 
 renderer = nil
-template = "#{__dir__}/repo-creator-files/template.makefile"
+template = "#{__dir__}/cpp-repo-files/template.makefile"
 if File.exists? template
 	File.open(template) do |file|
 		renderer = ERB.new(file.read)
@@ -148,7 +152,7 @@ File.open("Makefile", "w") do |file|
 	file.write(renderer.result())
 end
 
-FileUtils.cp("#{__dir__}/repo-creator-files/.clang-format", Dir.pwd)
+FileUtils.cp("#{__dir__}/cpp-repo-files/.clang-format", Dir.pwd)
 
 puts "Done!"
 
