@@ -24,6 +24,7 @@ options.library_dirs_spec = []
 options.install = false
 options.use_ltt = false
 options.remake = false
+options.pch = nil
 
 DEFAULT_CXX_FLAGS = ["Wall", "Wextra", "std=c++17", "O3", "march=native", "frename-registers", "funroll-loops"]
 
@@ -44,44 +45,53 @@ OptionParser.new() do |opts|
 		options.remake = v
 	end
 
-	opts.on('', "--include [INCLUDE]", "An include dir to use") do |v|
+	opts.on("--include [INCLUDE]", "An include dir to use") do |v|
 		options.include.push v
 	end
 
-	opts.on('', "--include-spec [INCLUDE]", "An include dir to use for specs") do |v|
+	opts.on("--include-spec [INCLUDE]", "An include dir to use for specs") do |v|
 		options.include_spec.push v
 	end
 
-	opts.on('', "--static [LIB]", "A static library to use") do |v|
+	opts.on("--static [LIB]", "A static library to use") do |v|
 		options.static.push v
 	end
 
-	opts.on('', "--static-spec [LIB]", "A static library to use when building specs") do |v|
+	opts.on("--static-spec [LIB]", "A static library to use when building specs") do |v|
 		options.static_spec.push v
 	end
 
-	opts.on('', "--shared [LIB]", "A shared library to use") do |v|
+	opts.on("--shared [LIB]", "A shared library to use") do |v|
 		options.shared.push v
 	end
 
-	opts.on('', "--shared-spec [LIB]", "A shared library to use when building specs") do |v|
+	opts.on("--shared-spec [LIB]", "A shared library to use when building specs") do |v|
 		options.shared_spec.push v
 	end
 
-	opts.on('', "--library [LIB]", "A library directory") do |v|
+	opts.on("--library [LIB]", "A library directory") do |v|
 		options.library_dirs.push v
 	end
 
-	opts.on('', "--library-spec [LIB]", "A library directory when building specs") do |v|
+	opts.on("--library-spec [LIB]", "A library directory when building specs") do |v|
 		options.library_dirs_spec.push v
 	end
 
-	opts.on('', "--install [DIR]", "Create a target to install to DIR") do |v|
+	opts.on("--install [DIR]", "Create a target to install to DIR") do |v|
 		options.install = v
 	end
 
-	opts.on('', "--use-ltt", "Enable the ltt repo libs") do |v|
+	opts.on("--use-ltt", "Enable the ltt repo libs") do |v|
 		options.use_ltt = v
+	end
+
+	opts.on("--pch [FILE]", "Enable precompiled headers") do |v|
+		if v[/.+\.h/].nil?
+			puts "--pch was used with an invalid file name, please specify a *.h file"
+			exit 1
+		else
+			options.pch = v
+		end
 	end
 end.parse!
 
