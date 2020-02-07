@@ -105,7 +105,7 @@ $(BIN)/$(EXE): $(SRC_OBJ_FILES) $(OBJ)/$(MAIN_OBJ)
 $(BIN)/$(EXE_SPEC): $(SPEC_OBJ_FILES) $(SRC_OBJ_FILES)
 	$(CXX) $(CXX_FLAGS) $(LIBRARY_DIRS_SPEC) $^ $(STATIC_LIBS_SPEC) -o $@ $(SHARED_LIBS_SPEC)
 <% unless options.pch.nil? %>
-$(INCLUDE)/$(PCH).gch: $(INCLUDE)/$(PCH)
+$(INCLUDE)/$(PCH).gch: $(INCLUDE)/$(PCH) Makefile
 	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP -x c++-header $(INCLUDE_DIRS) $< 
 <% end %>
 $(OBJ)/$(MAIN_OBJ): $(SRC)/$(MAIN_CXX) <%= if options.pch; "$(INCLUDE)/$(PCH).gch"; end %>
