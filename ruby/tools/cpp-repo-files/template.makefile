@@ -27,7 +27,7 @@ OBJ_DIRS			:= $(patsubst $(SRC)/%, $(OBJ)/%, $(SUB_DIRS))
 
 MAIN				:= main
 MAIN_CXX			:= $(MAIN).cxx
-MAIN_OBJ			:= $(MAIN).out
+MAIN_OBJ			:= $(MAIN).o
 
 INCLUDE_DIRS		:= -I$(INCLUDE) -I$(SRC) <%= options.include.map{ |i| "-I#{i}" }.join(' ') unless options.include.empty? %> <%= use_ltt?(options) %>
 INCLUDE_DIRS_SPEC	:= $(INCLUDE_DIRS) -I$(CSPEC_INCLUDE) <%= options.include_spec.map{ |i| "-I#{i}" }.join(' ') unless options.include_spec.empty? %>
