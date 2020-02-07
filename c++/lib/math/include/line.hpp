@@ -2,12 +2,13 @@
 #include <tuple>
 
 #include "math.hpp"
+#include "point.hpp"
 
 namespace math
 {
 	struct Line  // more like a vector but that name is already taken
 	{
-		long X1 = 0, Y1 = 0, X2 = 0, Y2 = 0;
+		Point P1, P2;
 
 		/* Returns the slope as a ratio */
 		template <typename T>
@@ -27,8 +28,8 @@ namespace math
 	template <typename T>
 	inline std::tuple<T, T> Line::slope()
 	{
-		auto num = Y2 - Y1;
-		auto den = X2 - X1;
+		auto num = P2.Y - P1.Y;
+		auto den = P2.X - P1.X;
 		auto gcd = EuclidsGCD(num, den);
 
 		return std::make_tuple(num / static_cast<T>(gcd), den / static_cast<T>(gcd));
@@ -37,30 +38,39 @@ namespace math
 	template <typename T>
 	inline T Line::angle()
 	{
-		long x = X1 - X2;
-		long y = Y1 - Y2;
+		auto p1Dist = P1.distFromOrigin();
+		auto p2Dist = P2.distFromOrigin();
+		Point close, far;
 
-		T theta = std::atan2(y, x);
-		if (theta < 0.0) {
-			theta += M_2_PI;
+		if (p1Dist > p2Dist) {
+			close = P2;
+			far = P1;
+		} else {
+			close = P1;
+			far = P2;
 		}
 
-		return theta;
+		Point op = far - close;
 
-		// bad
-		// T th1 = std::atan2(Y1, X1);
-		// T th2 = std::atan2(Y2, X2);
+		return std::fmod(std::atan2(op.Y, op.X), M_2_PI);
+
+		// long x = std::max(P1.X, P2.X) - std::min(P1.X, P2.X);
+		// long y = std::max(P1.Y, P2.Y) - std::min(P1.Y, P2.Y);
+		// return std::fmod(std::atan2(y, x), M_2_PI);
+
+		// T th1 = std::atan2(P1.Y, P1.X);
+		// T th2 = std::atan2(P2.Y, P2.X);
 		// return M_PI - std::abs(M_PI - std::abs(th1 - th2));
 	}
 
 	template <typename T>
 	inline T Line::dist()
 	{
-		return static_cast<T>(std::sqrt((X2 - X1) * (X2 - X1) + (Y2 - Y1) * (Y2 - Y1)));
+		return static_cast<T>(std::sqrt((P2.X - P1.X) * (P2.X - P1.X) + (P2.Y - P1.Y) * (P2.Y - P1.Y)));
 	}
 
 	inline bool Line::isUndefined()
 	{
-		return std::abs(X1 - X2) == 0;
+		return std::abs(P1.X - P2.X) == 0;
 	}
 }  // namespace math
