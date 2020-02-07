@@ -99,9 +99,7 @@ if options.remake
 	if File.exists? 'Makefile'
 		line1 = File.open('Makefile', &:readline)
 		cmdstr = line1.split[1..-1].join(' ')
-		puts "Executing: #{cmdstr}"
 		system(cmdstr)
-		puts "remade!"
 	else
 		puts "please generate a Makefile first"
 	end
@@ -135,6 +133,7 @@ def derive_autogen_commands(opts)
 	str = "#{str} #{opts.shared_spec.map{ |s| "--shared-spec '#{s}'" }.join(' ')}" unless opts.shared_spec.empty?
 	str = "#{str} --install" if opts.install
 	str = "#{str} --use-ltt" if opts.use_ltt
+	str = "#{str} --pch '#{opts.pch}'" if opts.pch
 	str
 end
 
