@@ -51,7 +51,7 @@ SRC_DEP_FILES		:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.d, $(SRC_FILES))
 SPEC_FILES			:= $(call rwildcard,$(SPEC),*.spec.cpp)
 SPEC_OBJ_FILES		:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.o, $(SPEC_FILES))
 SPEC_DEP_FILES		:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.d, $(SPEC_FILES))
-<% unless options.pch.nil? %>
+<% if options.pch %>
 PCH					:= <%= options.pch  %>
 <% end %>
 DEPENDENCIES		:= $(SRC_DEP_FILES) $(SPEC_DEP_FILES)
@@ -79,7 +79,7 @@ setup: <%= setup_dirs %>
 
 .PHONY: clean
 clean:
-	-rm -rf $(EXECUTABLES) $(OBJECTS) $(DEPENDENCIES)
+	-rm -f $(EXECUTABLES) $(OBJECTS) $(DEPENDENCIES) <%= if options.pch; "$(INCLUDE)/$(PCH).gch"; end %>
 
 .PHONY: force
 force: clean all
@@ -108,12 +108,13 @@ $(BIN)/$(EXE_SPEC): $(SPEC_OBJ_FILES) $(SRC_OBJ_FILES)
 $(INCLUDE)/$(PCH).gch: $(INCLUDE)/$(PCH)
 	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP -x c++-header $(INCLUDE_DIRS) $< 
 <% end %>
-$(OBJ)/$(MAIN_OBJ): $(SRC)/$(MAIN_CXX)
-	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS) $< 
-$(OBJ)/%.o: $(SRC)/%.cpp Makefile
+$(OBJ)/$(MAIN_OBJ): $(SRC)/$(MAIN_CXX) <%= if options.pch; "$(INCLUDE)/$(PCH).gch"; end %>
 	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS) $< 
 
-$(OBJ)/%.spec.o: $(SPEC)/%.spec.cpp Makefile
+$(OBJ)/%.o: $(SRC)/%.cpp Makefile <%= if options.pch; "$(INCLUDE)/$(PCH).gch"; end %>
+	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS) $< 
+
+$(OBJ)/%.spec.o: $(SPEC)/%.spec.cpp Makefile <%= if options.pch; "$(INCLUDE)/$(PCH).gch"; end %>
 	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS_SPEC) $< 
 <% for dir in DIRS %>
 <%= dir %>:
