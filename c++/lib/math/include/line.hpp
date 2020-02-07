@@ -5,9 +5,9 @@
 
 namespace math
 {
-	struct Line
+	struct Line  // more like a vector but that name is already taken
 	{
-		long X1, Y1, X2, Y2;
+		long X1 = 0, Y1 = 0, X2 = 0, Y2 = 0;
 
 		/* Returns the slope as a ratio */
 		template <typename T>
@@ -37,10 +37,20 @@ namespace math
 	template <typename T>
 	inline T Line::angle()
 	{
+		long x = X1 - X2;
+		long y = Y1 - Y2;
 
-		T th1 = std::atan2(Y1, X1);
-		T th2 = std::atan2(Y2, X2);
-		return M_PI - std::abs(M_PI - std::abs(th1 - th2));
+		T theta = std::atan2(y, x);
+		if (theta < 0.0) {
+			theta += M_2_PI;
+		}
+
+		return theta;
+
+		// bad
+		// T th1 = std::atan2(Y1, X1);
+		// T th2 = std::atan2(Y2, X2);
+		// return M_PI - std::abs(M_PI - std::abs(th1 - th2));
 	}
 
 	template <typename T>
