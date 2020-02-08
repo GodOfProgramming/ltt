@@ -80,7 +80,11 @@ setup: <%= setup_dirs %>
 .PHONY: clean
 clean:
 	-rm -f $(EXECUTABLES) $(OBJECTS) $(DEPENDENCIES) <%= if options.pch; "$(INCLUDE)/$(PCH).gch"; end %>
-
+<% unless options.pch.nil? %>
+.PHONY: clear-pch
+clear-pch:
+	rm $(INCLUDE)/$(PCH).gch
+<% end %>
 .PHONY: force
 force: clean all
 <% if options.install %>

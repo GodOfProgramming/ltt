@@ -9,7 +9,6 @@ class Foo:
     def add(self):
         return self.internal.add
 
-
 foo = Foo()
 
 print(foo.add().__func__(1, 2))

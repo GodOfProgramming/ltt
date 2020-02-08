@@ -15,6 +15,8 @@ namespace math
 
 		auto operator+(const Point& other) -> Point;
 		auto operator-(const Point& other) -> Point;
+
+		auto operator==(const Point& other) -> bool;
 	};
 
 	template <typename T1, typename T2>
@@ -41,6 +43,11 @@ namespace math
 	[[gnu::always_inline]] inline Point Point::operator-(const Point& other)
 	{
 		return Point{this->X - other.X, this->Y - other.Y};
+	}
+
+	[[gnu::always_inline]] inline auto Point::operator==(const Point& other) -> bool
+	{
+		return this->X == other.X && this->Y == other.Y;
 	}
 
 	[[gnu::always_inline]] inline std::ostream& operator<<(std::ostream& os, const Point& pt)
