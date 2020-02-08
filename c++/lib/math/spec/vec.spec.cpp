@@ -47,5 +47,13 @@ Eval(Vec)
 				Expect(vec.angle<double>()).toEqual(0.0);
 			});
 		});
+
+		Context("210 degrees", [&] {
+			It("returns 7pi/6", [&] {
+				vec.Direction.X = -(std::sqrt(3.0) / 2.0);
+				vec.Direction.Y = -0.5;
+				Expect(vec.angle<double>()).toEqual(7.0 * M_PI / 6.0);
+			});
+		});
 	});
 }

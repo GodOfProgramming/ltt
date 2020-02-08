@@ -7,7 +7,7 @@ namespace math
 {
 	struct Point
 	{
-		long X = 0, Y = 0;
+		double X = 0, Y = 0;
 
 		auto distFromOrigin() -> double;
 
@@ -20,7 +20,7 @@ namespace math
 	template <typename T1, typename T2>
 	[[gnu::always_inline]] inline Point PointFromPolar(T1 theta, T2 dist)
 	{
-		return {static_cast<long>(dist * std::cos(theta)), static_cast<long>(dist * std::sin(theta))};
+		return {dist * std::cos(theta), dist * std::sin(theta)};
 	}
 
 	[[gnu::always_inline]] inline double Point::distFromOrigin()
