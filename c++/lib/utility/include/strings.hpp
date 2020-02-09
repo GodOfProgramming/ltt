@@ -3,7 +3,6 @@
 
 namespace utility
 {
-
   inline std::vector<std::string> StringSplit(const std::string str, const std::regex delim);
 
   inline std::vector<std::string> StringSplit(const std::string str, const std::string regex);
