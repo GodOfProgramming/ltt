@@ -54,7 +54,7 @@ SPEC_DEP_FILES		:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.d, $(SPEC_FILES)
 <% if options.pch %>
 PCH					:= <%= options.pch  %>
 <% end %>
-DEPENDENCIES		:= $(SRC_DEP_FILES) $(SPEC_DEP_FILES)
+DEPENDENCIES		:= $(SRC_DEP_FILES) $(SPEC_DEP_FILES) <%= if options.pch; "$(INCLUDE)/$(PCH).d"; end %>
 
 OBJECTS				:= $(SRC_OBJ_FILES) $(SPEC_OBJ_FILES)
 EXECUTABLES			:= $(EXE) $(EXE_SPEC)

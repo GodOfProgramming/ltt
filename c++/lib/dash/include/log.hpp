@@ -13,6 +13,8 @@ namespace dash
 		template <unsigned int L, typename... Args>
 		void log(Args&&... args);
 
+		void shouldReset(bool val);
+
 	private:
 		Console mConsole;
 	};
@@ -25,5 +27,10 @@ namespace dash
 		if (L <= Level) {
 			mConsole.log(args...);
 		}
+	}
+
+	inline void Log::shouldReset(bool val)
+	{
+		mConsole.shouldReset(val);
 	}
 }  // namespace dash

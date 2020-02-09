@@ -26,14 +26,17 @@ namespace dash
 		template <typename... Args>
 		void log(Args&&... args);
 
+		void shouldReset(bool val);
+
 	private:
 		std::ostream& mStream;
 		std::mutex mLock;
+		bool mShouldReset;
 
 		static std::string StrTime();
 	};
 
-	inline Console::Console(std::ostream& stream): mStream(stream) {}
+	inline Console::Console(std::ostream& stream): mStream(stream), mShouldReset(true) {}
 
 	template <auto E>
 	constexpr const char* Console::Opt()
@@ -45,7 +48,13 @@ namespace dash
 	void Console::write(Args&&... args)
 	{
 		mLock.lock();
-		((mStream << std::forward<Args>(args)), ...) << Opt<M::FullReset>();
+
+		((mStream << std::forward<Args>(args)), ...);
+
+		if (mShouldReset) {
+			mStream << Opt<M::FullReset>();
+		}
+
 		mLock.unlock();
 	}
 
@@ -68,6 +77,11 @@ namespace dash
 		auto timestruct = localtime(&t);
 		auto count = std::strftime(timebuff.data(), timebuff.size() * sizeof(char) - 1, "%I:%M:%S %P", timestruct);
 		return std::string(timebuff.begin(), timebuff.begin() + count);
+	}
+
+	inline void Console::shouldReset(bool val)
+	{
+		mShouldReset = val;
 	}
 }  // namespace dash
 
