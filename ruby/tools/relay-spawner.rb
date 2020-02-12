@@ -1,5 +1,4 @@
 #!/bin/ruby
-eval ENV['REQUIRE_ONEOFFS']
 require 'optparse'
 require 'json'
 require 'set'
