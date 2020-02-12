@@ -11,7 +11,7 @@ namespace fiber
     {
        public:
         Fiber();
-        ~Fiber();
+        virtual ~Fiber();
 
         void assign(std::function<void(void)> func);
 
@@ -22,6 +22,8 @@ namespace fiber
         bool is_alive();
 
         bool has_task();
+
+				void onFinish(std::function<void(void)> onfinish);
 
        private:
         std::thread* mThread = nullptr;
@@ -38,6 +40,8 @@ namespace fiber
         std::atomic<bool> mHasTask;
 
         std::function<void(void)> mJob;
+
+				std::function<void(void)> mOnFinish;
 
         void notify_job();
 
@@ -70,6 +74,9 @@ namespace fiber
 
                 if (mJob && mHasTask) {
                     mJob();
+										if (mOnFinish) {
+											mOnFinish();
+										}
                     mHasTask = false;
                     notify_wait();
                 }
@@ -152,6 +159,10 @@ namespace fiber
     {
         return mHasTask;
     }
+
+		inline void Fiber::onFinish(std::function<void(void)> onfinish) {
+			mOnFinish = onfinish;
+		}
 
     inline void Fiber::free()
     {

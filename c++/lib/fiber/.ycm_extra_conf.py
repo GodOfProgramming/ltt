@@ -15,7 +15,7 @@ flags = [
 
 def Settings( **kwargs):
     cspec_include = os.getenv('CSPEC_INCLUDE')
-    flags.append(cspec_include)
+    flags.append("-I{}".format(cspec_include))
     return {
         'flags': flags,
         'include_paths_relative_to_dir': DIR_OF_THIS_SCRIPT

@@ -60,7 +60,7 @@ namespace fiber
             std::mutex wait_lock;
             std::unique_lock<std::mutex> lock(wait_lock);
             mWaitLock.unlock();
-            mWaitVar.wait(lock);
+            mWaitVar.wait(lock, [this] { return mSignals >= mSignalCount; });
         }
 
         return done;
