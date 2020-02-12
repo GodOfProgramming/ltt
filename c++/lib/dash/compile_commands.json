@@ -1,0 +1,70 @@
+[
+ {
+  "directory": "/home/jonpdickert/workspace/ltt/c++/lib/dash", 
+  "arguments": [
+   "g++", 
+   "-Wall", 
+   "-Wextra", 
+   "-std=c++17", 
+   "-O3", 
+   "-march=native", 
+   "-frename-registers", 
+   "-funroll-loops", 
+   "-o", 
+   "obj/main.o", 
+   "-c", 
+   "-MMD", 
+   "-MP", 
+   "-Iinclude", 
+   "-Isrc", 
+   "src/main.cxx"
+  ], 
+  "file": "src/main.cxx"
+ }, 
+ {
+  "directory": "/home/jonpdickert/workspace/ltt/c++/lib/dash", 
+  "arguments": [
+   "g++", 
+   "-Wall", 
+   "-Wextra", 
+   "-std=c++17", 
+   "-O3", 
+   "-march=native", 
+   "-frename-registers", 
+   "-funroll-loops", 
+   "-o", 
+   "obj/console.spec.o", 
+   "-c", 
+   "-MMD", 
+   "-MP", 
+   "-Iinclude", 
+   "-Isrc", 
+   "-I/home/jonpdickert/workspace/cspec/include", 
+   "spec/console.spec.cpp"
+  ], 
+  "file": "spec/console.spec.cpp"
+ }, 
+ {
+  "directory": "/home/jonpdickert/workspace/ltt/c++/lib/dash", 
+  "arguments": [
+   "g++", 
+   "-Wall", 
+   "-Wextra", 
+   "-std=c++17", 
+   "-O3", 
+   "-march=native", 
+   "-frename-registers", 
+   "-funroll-loops", 
+   "-o", 
+   "obj/log.spec.o", 
+   "-c", 
+   "-MMD", 
+   "-MP", 
+   "-Iinclude", 
+   "-Isrc", 
+   "-I/home/jonpdickert/workspace/cspec/include", 
+   "spec/log.spec.cpp"
+  ], 
+  "file": "spec/log.spec.cpp"
+ }
+]

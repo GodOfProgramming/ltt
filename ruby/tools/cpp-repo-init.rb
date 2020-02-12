@@ -5,9 +5,9 @@ require 'sys_helpers'
 require 'fileutils'
 require 'erb'
 
-#######################
-### Option Parsing ####
-#######################
+######################
+### Option Parsing ###
+######################
 
 options = OpenStruct.new
 options.exe = SysHelpers.this_dir
@@ -25,6 +25,7 @@ options.install = false
 options.use_ltt = false
 options.remake = false
 options.pch = nil
+options.install_ycm
 
 DEFAULT_CXX_FLAGS = ["Wall", "Wextra", "std=c++17", "O3", "march=native", "frename-registers", "funroll-loops"]
 
@@ -93,7 +94,16 @@ OptionParser.new() do |opts|
 			options.pch = v
 		end
 	end
+
+  opts.on("--ycm", "Copy the YouCompleteMe extra conf file") do |v|
+    options.install_ycm = v
+  end
 end.parse!
+
+if options.install_ycm
+  FileUtils.cp("#{__dir__}/cpp-repo-files/.ycm_extra_conf.py", Dir.pwd)
+  exit 0
+end
 
 if options.remake
 	if File.exists? 'Makefile'
@@ -146,11 +156,8 @@ DIRS = [ '$(SRC)', '$(INCLUDE)', '$(SPEC)', '$(BIN)', '$(OBJ)', '$(OBJ_DIRS)' ]
 setup_dirs = DIRS.join(' ')
 
 renderer = nil
-template = "#{__dir__}/cpp-repo-files/template.makefile"
-if File.exists? template
-	File.open(template) do |file|
-		renderer = ERB.new(file.read)
-	end
+File.open("#{__dir__}/cpp-repo-files/template.makefile") do |file|
+  renderer = ERB.new(file.read)
 end
 
 ##############
