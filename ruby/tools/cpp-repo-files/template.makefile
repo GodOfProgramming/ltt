@@ -10,54 +10,54 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 ### Variables ###
 #################
 
-EXE					:= <%= options.exe %>
-EXE_SPEC			:= $(EXE).spec
+EXE									:= <%= options.exe %>
+EXE_SPEC						:= $(EXE).spec
 
-CXX					:= <%= options.cxx %>
-CXX_FLAGS 			:= <%= (options.cxx_flags + DEFAULT_CXX_FLAGS).map{ |f| "-#{f}" }.join(' ') %>
+CXX									:= <%= options.cxx %>
+CXX_FLAGS 					:= <%= (options.cxx_flags + DEFAULT_CXX_FLAGS).map{ |f| "-#{f}" }.join(' ') %>
 
-SRC					:= src
-INCLUDE				:= include
-SPEC				:= spec
-BIN					:= bin
-OBJ					:= obj
+SRC									:= src
+INCLUDE							:= include
+SPEC								:= spec
+BIN									:= bin
+OBJ									:= obj
 
-SUB_DIRS			:= $(shell find $(SRC)/* -type d -print)
-OBJ_DIRS			:= $(patsubst $(SRC)/%, $(OBJ)/%, $(SUB_DIRS))
+SUB_DIRS						:= $(shell find $(SRC)/* -type d -print)
+OBJ_DIRS						:= $(patsubst $(SRC)/%, $(OBJ)/%, $(SUB_DIRS))
 
-MAIN				:= main
-MAIN_CXX			:= $(MAIN).cxx
-MAIN_OBJ			:= $(MAIN).o
+MAIN								:= main
+MAIN_CXX						:= $(MAIN).cxx
+MAIN_OBJ						:= $(MAIN).o
 
-INCLUDE_DIRS		:= -I$(INCLUDE) -I$(SRC) <%= options.include.map{ |i| "-I#{i}" }.join(' ') unless options.include.empty? %> <%= use_ltt?(options) %>
-INCLUDE_DIRS_SPEC	:= $(INCLUDE_DIRS) -I$(CSPEC_INCLUDE) <%= options.include_spec.map{ |i| "-I#{i}" }.join(' ') unless options.include_spec.empty? %>
+INCLUDE_DIRS				:= -I$(INCLUDE) -I$(SRC) <%= options.include.map{ |i| "-I#{i}" }.join(' ') unless options.include.empty? %> <%= use_ltt?(options) %>
+INCLUDE_DIRS_SPEC		:= $(INCLUDE_DIRS) -I$(CSPEC_INCLUDE) <%= options.include_spec.map{ |i| "-I#{i}" }.join(' ') unless options.include_spec.empty? %>
 
-STATIC_LIBS			:= <%= options.static.join(' ') unless options.static.empty? %>
-STATIC_LIBS_SPEC	:= $(STATIC_LIBS) <%= options.static_spec.join(' ') unless options.static_spec.empty? %>
+STATIC_LIBS					:= <%= options.static.join(' ') unless options.static.empty? %>
+STATIC_LIBS_SPEC		:= $(STATIC_LIBS) <%= options.static_spec.join(' ') unless options.static_spec.empty? %>
 
-SHARED_LIBS			:= <%= options.shared.map{ |s| "-l#{s}" }.join(' ') unless options.shared.empty? %>
-SHARED_LIBS_SPEC	:= $(SHARED_LIBS) -lcspec <%= options.shared_spec.map{ |s| "-l#{s}" }.join(' ') unless options.shared_spec.empty? %>
+SHARED_LIBS					:= <%= options.shared.map{ |s| "-l#{s}" }.join(' ') unless options.shared.empty? %>
+SHARED_LIBS_SPEC		:= $(SHARED_LIBS) -lcspec <%= options.shared_spec.map{ |s| "-l#{s}" }.join(' ') unless options.shared_spec.empty? %>
 
-LIBRARY_DIRS		:= <%= options.library_dirs.map{ |l| "-L#{l}" }.join(' ') unless options.library_dirs.empty? %>
-LIBRARY_DIRS_SPEC	:= $(LIBRARY_DIRS) <%= options.library_dirs_spec.map{ |l| "-L#{l}" }.join(' ') unless options.library_dirs_spec.empty? %>
+LIBRARY_DIRS				:= <%= options.library_dirs.map{ |l| "-L#{l}" }.join(' ') unless options.library_dirs.empty? %>
+LIBRARY_DIRS_SPEC		:= $(LIBRARY_DIRS) <%= options.library_dirs_spec.map{ |l| "-L#{l}" }.join(' ') unless options.library_dirs_spec.empty? %>
 <% if options.install %>
-INSTALL_DIR			:= <%= options.install %>
+INSTALL_DIR					:= <%= options.install %>
 <% end %>
-SRC_FILES			:= $(call rwildcard,$(SRC),*.cpp)
+SRC_FILES						:= $(call rwildcard,$(SRC),*.cpp)
 
-SRC_OBJ_FILES		:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRC_FILES))
-SRC_DEP_FILES		:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.d, $(SRC_FILES))
+SRC_OBJ_FILES				:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRC_FILES))
+SRC_DEP_FILES				:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.d, $(SRC_FILES))
 
-SPEC_FILES			:= $(call rwildcard,$(SPEC),*.spec.cpp)
-SPEC_OBJ_FILES		:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.o, $(SPEC_FILES))
-SPEC_DEP_FILES		:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.d, $(SPEC_FILES))
+SPEC_FILES					:= $(call rwildcard,$(SPEC),*.spec.cpp)
+SPEC_OBJ_FILES			:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.o, $(SPEC_FILES))
+SPEC_DEP_FILES			:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.d, $(SPEC_FILES))
 <% if options.pch %>
-PCH					:= <%= options.pch  %>
+PCH									:= <%= options.pch  %>
 <% end %>
-DEPENDENCIES		:= $(SRC_DEP_FILES) $(SPEC_DEP_FILES) <%= if options.pch; "$(INCLUDE)/$(PCH).d"; end %>
+DEPENDENCIES				:= $(SRC_DEP_FILES) $(SPEC_DEP_FILES) <%= if options.pch; "$(INCLUDE)/$(PCH).d"; end %>
 
-OBJECTS				:= $(SRC_OBJ_FILES) $(SPEC_OBJ_FILES)
-EXECUTABLES			:= $(EXE) $(EXE_SPEC)
+OBJECTS							:= $(SRC_OBJ_FILES) $(SPEC_OBJ_FILES)
+EXECUTABLES					:= $(EXE) $(EXE_SPEC)
 
 ################
 ### Targets  ###
