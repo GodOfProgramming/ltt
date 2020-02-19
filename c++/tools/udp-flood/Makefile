@@ -1,4 +1,4 @@
-# cpp-repo-init.rb --shared 'pthread'
+# cpp-repo-init.rb -e '../../bin/udp-flood' --shared 'pthread'
 
 #################
 ### Functions ###
@@ -10,7 +10,7 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 ### Variables ###
 #################
 
-EXE									:= udp-flood
+EXE									:= ../../bin/udp-flood
 EXE_SPEC						:= $(EXE).spec
 
 CXX									:= g++
