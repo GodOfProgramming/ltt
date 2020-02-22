@@ -1,4 +1,4 @@
-#include "image.hpp"
+#include "art/image.hpp"
 #include <iostream>
 
 int main()
