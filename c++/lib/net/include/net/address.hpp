@@ -36,7 +36,7 @@ namespace net
       return false;
     }
 
-    auto parts = utility::StringSplit(addr, R"(\.)");
+    auto parts = utility::StringSplit(split[0], R"(\.)");
     if (parts.size() != 4) {
       return false;
     }

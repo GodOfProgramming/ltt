@@ -1,17 +1,14 @@
 #pragma once
-#include <vector>
-#include <cinttypes>
 
 namespace net
 {
-  class Socket
+  enum class SocketType
   {
-    virtual bool create() = 0;
-
-    virtual bool send(const std::vector<uint8_t>& data) = 0;
-
-   protected:
-    Socket() = default;
+    UDP,
+    TCP
   };
+
+  template <SocketType T>
+  class Socket;
 }  // namespace net
 
