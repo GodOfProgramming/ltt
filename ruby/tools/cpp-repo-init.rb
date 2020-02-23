@@ -23,9 +23,9 @@ options.shared = []
 options.shared_spec = []
 options.library_dirs = []
 options.library_dirs_spec = []
-options.install = false
-options.use_ltt = false
-options.remake = false
+options.install = nil
+options.use_ltt = nil
+options.remake = nil
 options.pch = nil
 options.install_ycm
 
@@ -118,6 +118,10 @@ if options.remake
   exit 0
 end
 
+###########################
+### Makefile Generation ###
+###########################
+
 if options.exe.empty?
   puts "-e, --exe is required"
   exit 1
@@ -127,10 +131,6 @@ if options.cxx.empty?
   puts "-c, --cxx is required"
   exit 1
 end
-
-###########################
-### Makefile Generation ###
-###########################
 
 def derive_autogen_commands(opts)
   str = File.basename(__FILE__)
@@ -157,11 +157,13 @@ def use_ltt?(opts)
   "#{if opts.use_ltt; '$(MAKE_INCLUDE_HELPER)'; end }"
 end
 
+DIRS = ['$(SRC)', '$(INCLUDE)', '$(SPEC)', '$(BIN)', '$(OBJ)', '$(OBJ_DIRS)']
+
 all_vars = [
   MakefileVar.new('EXE', options.exe),
   MakefileVar.new('EXE_SPEC', '$(EXE).spec'),
   MakefileVar.new('CXX', options.cxx),
-  MakefileVar.new('CXX_FLAGS', expand_flags(options.cxx_flags + DEFAULT_CXX_FLAGS, '-')),
+  MakefileVar.new('CXX_FLAGS', expand_flags([*options.cxx_flags, *DEFAULT_CXX_FLAGS], '-')),
   MakefileVar.new('SRC', 'src'),
   MakefileVar.new('INCLUDE', 'include'),
   MakefileVar.new('SPEC', 'spec'),
@@ -172,39 +174,129 @@ all_vars = [
   MakefileVar.new('MAIN', 'main'),
   MakefileVar.new('MAIN_CXX', '$(MAIN).cxx'),
   MakefileVar.new('MAIN_OBJ', '$(MAIN).o'),
-  MakefileVar.new('INCLUDE_DIRS', '-I$(INCLUDE) -I$(SRC) ' + expand_flags(options.include, '-I') + use_ltt?(options)),
-  MakefileVar.new('INCLUDE_DIRS_SPEC', '$(INCLUDE_DIRS) -I$(CSPEC_INCLUDE) ' + expand_flags(options.include_spec, '-I')),
+  MakefileVar.new('INCLUDE_DIRS', '-I$(INCLUDE) -I$(SRC) ', expand_flags(options.include, '-I'), use_ltt?(options)),
+  MakefileVar.new('INCLUDE_DIRS_SPEC', '$(INCLUDE_DIRS) -I$(CSPEC_INCLUDE) ', expand_flags(options.include_spec, '-I')),
   MakefileVar.new('STATIC_LIBS', expand_flags(options.static, nil)),
-  MakefileVar.new('STATIC_LIBS_SPEC', '$(STATIC_LIBS) ' + expand_flags(options.static_spec, nil)),
+  MakefileVar.new('STATIC_LIBS_SPEC', '$(STATIC_LIBS) ', expand_flags(options.static_spec, nil)),
   MakefileVar.new('SHARED_LIBS', expand_flags(options.shared, '-l')),
-  MakefileVar.new('SHARED_LIBS_SPEC', '$(SHARED_LIBS) -lcspec ' + expand_flags(options.shared_spec, '-l')),
+  MakefileVar.new('SHARED_LIBS_SPEC', '$(SHARED_LIBS) -lcspec ', expand_flags(options.shared_spec, '-l')),
   MakefileVar.new('LIBRARY_DIRS', expand_flags(options.library_dirs, '-L')),
-  MakefileVar.new('LIBRARY_DIRS_SPEC', '$(LIBRARY_DIRS_SPEC) ' + expand_flags(options.library_dirs_spec, '-L')),
+  MakefileVar.new('LIBRARY_DIRS_SPEC', '$(LIBRARY_DIRS_SPEC) ', expand_flags(options.library_dirs_spec, '-L')),
   MakefileVar.new('INSTALL_DIR', options.install),
-  MakefileVar.new('SRC_FILES', '$(call rwildcard,$(SRC),*.cpp)'),
+  MakefileVar.new('SRC_FILES', '$(call rwildcard, $(SRC), *.cpp)'),
   MakefileVar.new('SRC_OBJ_FILES', '$(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRC_FILES))'),
   MakefileVar.new('SRC_DEP_FILES', '$(patsubst $(SRC)/%.cpp, $(OBJ)/%.d, $(SRC_FILES))'),
-  MakefileVar.new('SPEC_FILES', '$(call rwildcard,$(SPEC),*.spec.cpp)'),
+  MakefileVar.new('SPEC_FILES', '$(call rwildcard, $(SPEC), *.spec.cpp)'),
   MakefileVar.new('SPEC_OBJ_FILES', '$(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.o, $(SPEC_FILES))'),
   MakefileVar.new('SPEC_DEP_FILES', '$(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.d, $(SPEC_FILES))'),
   MakefileVar.new('PCH', options.pch),
-  MakefileVar.new('DEPENDENCIES', '$(SRC_DEP_FILES) $(SPEC_DEP_FILES) ' + "#{ if options.pch; "#{options.pch}.d"; end }"),
+  MakefileVar.new('DEPENDENCIES', '$(SRC_DEP_FILES) $(SPEC_DEP_FILES) ', options.pch ? "$(OBJ)/$(PCH).d" : '' ),
   MakefileVar.new('OBJECTS', '$(SRC_OBJ_FILES) $(SPEC_OBJ_FILES)'),
   MakefileVar.new('EXECUTABLES', '$(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)')
 ]
 
-all_targets = [
-  MakefileTarget.new('all', nil, true, 'setup', '$(BIN)/$(EXE)', '$(BIN)/$(EXE_SPEC)'),
-  MakefileTarget.new('run-tests', '@$<', true, '$(BIN)/$(EXE)')
+phony_targets = [
+  MakefileTarget.new(
+    true, 
+    'all', ['setup', '$(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)']
+  ),
+  MakefileTarget.new(
+    true, 
+    'run-tests', ['$(BIN)/$(EXE)'],
+    '@$<' 
+  ),
+  MakefileTarget.new(
+    true, 
+    'run-benchmarks', ['$(BIN)/$(EXE)'], 
+    '@$< --no-eval --bench'
+  ),
+  MakefileTarget.new(
+    true,
+    'setup', DIRS
+  ),
+  MakefileTarget.new(
+    true,
+    'clean', nil, 
+    '-rm -f $(EXECUTABLES) $(OBJECTS) $(DEPENDENCIES) ' + (options.pch ? "$(INCLUDE)/$(PCH).gch" : '')
+  ),
+  MakefileTarget.new(
+    true,
+    'force', ['clean all']
+  ),
+  MakefileTarget.new(
+    true,
+    'check', ["$(BIN)/$(EXE)"],
+    "@$<",
+    "@echo 'Passed!'"
+  ),
+  MakefileTarget.new(
+    true,
+    'ci', ['all check']
+  )
 ]
 
-DIRS = [ '$(SRC)', '$(INCLUDE)', '$(SPEC)', '$(BIN)', '$(OBJ)', '$(OBJ_DIRS)' ]
+unless options.pch.nil?
+  phony_targets.push(MakefileTarget.new(
+    true,
+    'clear-pch', nil,
+    'rm $(INCLUDE)/$(PCH).gch' 
+  ))
+end
 
-setup_dirs = DIRS.join(' ')
+unless options.install.nil?
+  phony_targets.push(MakefileTarget.new(
+    true,
+    'install', nil,
+    "@echo 'Installing into $(INSTALL_DIR)",
+    "@install $(BIN)/$(EXE) $(INSTALL_DIR)"
+  ))
+end
+
+real_targets = [
+  MakefileTarget.new(
+    false,
+    '$(BIN)/$(EXE)', ['$(SRC_OBJ_FILES) $(OBJ)/$(MAIN_OBJ)'],
+    '$(CXX) $(CXX_FLAGS) $(LIBRARY_DIRS) $^ $(STATIC_LIBS) -o $@ $(SHARED_LIBS)' 
+  ),
+  MakefileTarget.new(
+    false, 
+    '$(BIN)/$(EXE_SPEC)', ['$(SPEC_OBJ_FILES) $(SRC_OBJ_FILES)'],
+    '$(CXX) $(CXX_FLAGS) $(LIBRARY_DIRS_SPEC) $^ $(STATIC_LIBS_SPEC) -o $@ $(SHARED_LIBS_SPEC)'
+  ),
+  MakefileTarget.new(
+    false, 
+    '$(OBJ)/$(MAIN_OBJ)', ['$(SRC)/$(MAIN_CXX) ', options.pch ? "$(INCLUDE)/$(PCH).gch" : ''],
+    '$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS) $<'
+  ),
+  MakefileTarget.new(
+    false, 
+    '$(OBJ)/%.o',  ['$(SRC)/%.cpp Makefile ', options.pch ? "$(INCLUDE)/$(PCH).gch" : ''],
+    '$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS) $<'
+  ),
+  MakefileTarget.new(
+    false,
+    '$(OBJ)/%.spec.o', ['$(SPEC)/%.spec.cpp Makefile ', options.pch ? "$(INCLUDE)/$(PCH).gch" : ''],
+    '$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS_SPEC) $<'
+  )
+]
+
+unless options.pch.nil?
+  real_targets.push(MakefileTarget.new(
+    false,
+    '$(INCLUDE)/$(PCH).gch', ['$(INCLUDE)/$(PCH) Makefile'],
+    '$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP -x c++-header $(INCLUDE_DIRS) $<'
+  ))
+end
+
+real_targets += DIRS.map{ |dir| MakefileTarget.new(
+  false,
+  dir, nil,
+  '@mkdir -p $@',
+)}
 
 renderer = nil
 File.open("#{__dir__}/cpp-repo-files/template.makefile") do |file|
-  renderer = ERB.new(file.read)
+  renderer = ERB.new(file.read, nil, '-')
 end
 
 ##############

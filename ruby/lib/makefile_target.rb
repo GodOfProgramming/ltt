@@ -1,17 +1,18 @@
 class MakefileTarget
-  attr_reader :name, :task, :phony, :deps
+  attr_reader :name, :tasks, :phony, :deps
 
-  def initialize(name, task, phony, *deps)
-    @name = name
-    @task = task
+  def initialize(phony, name, deps, *tasks)
     @phony = phony
+    @name = name
     @deps = deps
+    @tasks = tasks
   end
 
   def to_s
     str = ''
     str += ".PHONY: #{name}\n" if phony
-    str += "#{name}: #{deps.join(' ')}\n"
-    str += "\t#{task}\n" if task
+    str += "#{name}: #{ if deps; deps.join(' '); end }\n"
+    str += "\t#{ tasks.map{ |task| "#{task}\n" }.join("\t") }" if tasks.length > 0
+    str
   end
 end

@@ -1,13 +1,13 @@
 class MakefileVar
-  attr_reader :name, :value
+  attr_reader :name, :values
 
-  def initialize(name, value)
+  def initialize(name, *values)
     @name = name
-    @value = value
+    @values = values
   end
 
   def to_s
-    "%-20s:= %s" % [name, value]
+    "%-20s:= %s\n" % [name, values.join(' ')]
   end
 end
 
