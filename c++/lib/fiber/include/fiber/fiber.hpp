@@ -19,14 +19,17 @@ namespace fiber
 
     void wait();
 
-    bool is_alive();
+    bool isAlive();
 
-    bool has_task();
+    bool hasTask();
 
     void onFinish(std::function<void(void)> onfinish);
 
    private:
-    std::thread* mThread = nullptr;
+    std::atomic<bool> mAlive;
+    std::atomic<bool> mHasJob;
+
+		std::unique_ptr<std::thread> mThread = nullptr;
 
     std::mutex mJobAssignLock;
 
@@ -36,16 +39,13 @@ namespace fiber
     std::mutex mWaitLock;
     std::condition_variable mWaitVar;
 
-    std::atomic<bool> mAlive;
-    std::atomic<bool> mHasTask;
-
     std::function<void(void)> mJob;
 
     std::function<void(void)> mOnFinish;
 
-    void notify_job();
+    void notifyJob();
 
-    void notify_wait();
+    void notifyWait();
 
     void notify();
 
@@ -57,31 +57,28 @@ namespace fiber
   inline Fiber::Fiber()
   {
     mAlive = true;
-    mHasTask = false;
+    mHasJob = false;
 
-    mThread = new std::thread([this]() -> void {
+    mThread = std::make_unique<std::thread>([this]() -> void {
       while (mAlive) {
         // If there is no job present, wait
-
         std::unique_lock<std::mutex> lock(mJobLock);
         mJobVar.wait(lock, [this]() -> bool {
-          return mHasTask;
+          return mHasJob || !mAlive;
         });
 
         // when there is a job present, execute
-
-        mJobAssignLock.lock();
-
-        if (mJob && mHasTask) {
-          mJob();
-          if (mOnFinish) {
-            mOnFinish();
+        {
+          std::lock_guard<std::mutex> lk(mJobAssignLock);
+          if (mHasJob) {
+            mJob();
+            if (mOnFinish) {
+              mOnFinish();
+            }
+            mHasJob = false;
+            notifyWait();
           }
-          mHasTask = false;
-          notify_wait();
         }
-
-        mJobAssignLock.unlock();
       }
     });
   }
@@ -93,57 +90,52 @@ namespace fiber
 
     // wait for it to finish
     join();
-
-    // free memory
-    delete mThread;
   }
 
   inline void Fiber::assign(std::function<void(void)> func)
   {
-    {
-      // lock so if there is a running job it waits
-      std::lock_guard<std::mutex> lk(mJobAssignLock);
-      // assign the job
-      mJob = func;
-    }
+    // lock so if there is a running job it waits
+    std::lock_guard<std::mutex> lk(mJobAssignLock);
+    // assign the job
+    mJob = func;
   }
 
   inline void Fiber::run()
   {
     // state there is a task
-    mHasTask = true;
+    mHasJob = true;
 
     // signal there is a job waiting
-    notify_job();
+    notifyJob();
   }
 
   inline void Fiber::wait()
   {
-    if (mJob && mHasTask) {
-      std::unique_lock<std::mutex> lock(mWaitLock);
-      mWaitVar.wait(lock);
-    }
+    std::unique_lock<std::mutex> lock(mWaitLock);
+    mWaitVar.wait(lock, [this]() -> bool {
+      return !mHasJob && mAlive;
+    });
   }
 
-  inline bool Fiber::is_alive()
+  inline bool Fiber::isAlive()
   {
     return mAlive;
   }
 
-  inline void Fiber::notify_job()
+  inline void Fiber::notifyJob()
   {
     mJobVar.notify_one();
   }
 
-  inline void Fiber::notify_wait()
+  inline void Fiber::notifyWait()
   {
     mWaitVar.notify_one();
   }
 
   inline void Fiber::notify()
   {
-    notify_job();
-    notify_wait();
+    notifyJob();
+    notifyWait();
   }
 
   inline void Fiber::join()
@@ -153,9 +145,9 @@ namespace fiber
     }
   }
 
-  inline bool Fiber::has_task()
+  inline bool Fiber::hasTask()
   {
-    return mHasTask;
+    return mHasJob;
   }
 
   inline void Fiber::onFinish(std::function<void(void)> onfinish)
@@ -169,8 +161,7 @@ namespace fiber
     mAlive = false;
 
     // activate the condition variables so the program resumes
-    notify_job();
-    notify_wait();
+    notify();
   }
 }  // namespace fiber
 

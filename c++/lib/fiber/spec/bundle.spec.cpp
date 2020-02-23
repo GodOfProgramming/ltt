@@ -8,28 +8,24 @@ Eval(Bundle)
   Describe("push()", [] {
     Context("basic job pushing", [] {
       It("adds and executes the jobs", [] {
+        const auto threads = 2;
+        const auto jobs = 100;
+
+        fiber::Bundle bundle(threads);
+        fiber::WaitGroup wg(jobs);
+
         std::atomic<int> counter = 0;
-        fiber::Bundle bundle(2);
-				fiber::WaitGroup wg(3);
 
-        bundle.push([&] {
-          counter++;
-					wg.signal();
-        });
+        for (int i = 0; i < jobs; i++) {
+          bundle.tie([&] {
+            counter++;
+            wg.signal();
+          });
+        }
 
-        bundle.push([&] {
-          counter++;
-					wg.signal();
-        });
+        wg.wait();
 
-        bundle.push([&] {
-          counter++;
-					wg.signal();
-        });
-
-				wg.wait();
-
-				Expect(static_cast<int>(counter)).toEqual(3);
+        Expect(static_cast<int>(counter)).toEqual(jobs);
       });
     });
   });

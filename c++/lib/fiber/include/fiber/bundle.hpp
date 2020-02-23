@@ -17,66 +17,62 @@ namespace fiber
     Bundle(uint8_t fiberCount = 1);
     ~Bundle();
 
-    void push(std::function<void(void)> func);
+    void tie(std::function<void(void)> func);
 
    private:
     std::atomic<bool> mAlive;
 
-    std::unique_ptr<std::thread> mMasterThread;
+    std::unique_ptr<std::thread> mDispatchThread;
+
     std::deque<std::shared_ptr<Fiber>> mFibers;
+    std::atomic<uint8_t> mFreeFibers;
 
     std::deque<std::function<void(void)>> mJobs;
-    std::mutex mJobCountLock;
+		std::atomic<uint8_t> mJobCount;
 
-    std::mutex mNoJobsLock;
-    std::condition_variable mNoJobsVar;
+    std::mutex mTieLock;
 
-    uint8_t mFreeFibers;
+    std::mutex mWaitLock;
+    std::condition_variable mWaitVar;
 
     void notify();
   };
 
-  Bundle::Bundle(uint8_t fiberCount): mFreeFibers(fiberCount)
+  Bundle::Bundle(uint8_t fiberCount): mFreeFibers(fiberCount), mJobCount(0)
   {
     for (uint8_t i = 0; i < fiberCount; i++) {
       auto fiber = std::make_shared<Fiber>();
       fiber->onFinish([this] {
-        mJobCountLock.lock();
         this->mFreeFibers++;
-        mJobCountLock.unlock();
         this->notify();
       });
       mFibers.push_back(fiber);
     }
 
-    mMasterThread = std::make_unique<std::thread>([this]() {
+    mDispatchThread = std::make_unique<std::thread>([this]() {
       while (mAlive) {
-        mJobCountLock.lock();  // prevent adding to the job list when checking
-        if (mJobs.size() == 0) {
-          std::unique_lock<std::mutex> lock(mNoJobsLock);
-          mJobCountLock.unlock();  // allow jobs to be added
-          mNoJobsVar.wait(lock);   // immediatly wait
-        } else {
-          mJobCountLock.unlock();  // allow jobs to be added
-        }
+        std::unique_lock<std::mutex> lock(mWaitLock);
+        mWaitVar.wait(lock, [this]() -> bool {
+          return (mFreeFibers > 0 && mJobCount > 0) || !mAlive;
+        });
 
-        mJobCountLock.lock();
         {
+          std::lock_guard<std::mutex> lk(mTieLock);
           for (auto& fiber : mFibers) {
             // if there's no available resources, break
-            if (mJobs.size() == 0 || mFreeFibers == 0 || !mAlive) {
+            if (mJobCount == 0 || mFreeFibers == 0 || !mAlive) {
               break;
             }
 
-            if (!fiber->has_task()) {
+            if (!fiber->hasTask()) {
               mFreeFibers--;
               fiber->assign(mJobs.front());
               fiber->run();
               mJobs.pop_front();
+							mJobCount--;
             }
           }
         }
-        mJobCountLock.unlock();  // allow jobs to be added
       }
     });
   }
@@ -85,25 +81,23 @@ namespace fiber
   {
     mAlive = false;
     this->notify();
-    this->mMasterThread->join();
+    this->mDispatchThread->join();
 
     for (auto& fiber : mFibers) {
       fiber.reset();
     }
   }
 
-  void Bundle::push(std::function<void(void)> job)
+  void Bundle::tie(std::function<void(void)> job)
   {
-    mJobCountLock.lock();
-    mJobs.push_back(job);     // add a job to the queue
-    mNoJobsVar.notify_one();  // wake up the master thread
-    mJobCountLock.unlock();
+    std::lock_guard<std::mutex> lk(mTieLock);
+    mJobs.push_back(job);  // add a job to the queue
+		mJobCount++;
+    notify();              // wake up the master thread
   }
 
   void Bundle::notify()
   {
-    mJobCountLock.lock();
-    mNoJobsVar.notify_one();  // wake up the master thread
-    mJobCountLock.unlock();
+    mWaitVar.notify_one();  // wake up the master thread
   }
 }  // namespace fiber
