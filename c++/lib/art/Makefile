@@ -80,9 +80,6 @@ EXECUTABLES         := $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
 ### Targets  ###
 ################
 
-test:
-	echo '$(SRC_FILES)'
-
 .PHONY: all
 all: setup $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
 

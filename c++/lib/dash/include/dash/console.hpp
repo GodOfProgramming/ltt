@@ -4,8 +4,8 @@
 #include <ctime>
 #include <strings.h>
 #include <mutex>
-#include "dash_internals/defines.hpp"
-#include "dash_internals/console_styling.hpp"
+#include "internal/defines.hpp"
+#include "internal/console_styling.hpp"
 
 namespace dash
 {

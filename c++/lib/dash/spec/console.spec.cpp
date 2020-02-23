@@ -1,5 +1,5 @@
 #include <cspec.hpp>
-#include "console.hpp"
+#include "dash/console.hpp"
 
 #include <cstring>
 #include <sstream>
