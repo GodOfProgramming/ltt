@@ -1,4 +1,4 @@
-#include "vec.hpp"
+#include "math/vec.hpp"
 
 #include <cspec.hpp>
 
