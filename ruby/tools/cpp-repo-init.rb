@@ -27,7 +27,8 @@ options.install = nil
 options.use_ltt = nil
 options.remake = nil
 options.pch = nil
-options.install_ycm
+options.install_ycm = false
+options.install_clang_format = false
 
 DEFAULT_CXX_FLAGS = ["Wall", "Wextra", "std=c++17", "O3", "march=native", "frename-registers", "funroll-loops"]
 
@@ -100,10 +101,19 @@ OptionParser.new() do |opts|
   opts.on("--ycm", "Copy the YouCompleteMe extra conf file") do |v|
     options.install_ycm = v
   end
+
+  opts.on("--clang-format", "Copy the clang-format file") do |v|
+    options.install_clang_format = v
+  end
 end.parse!
 
 if options.install_ycm
   FileUtils.cp("#{__dir__}/cpp-repo-files/.ycm_extra_conf.py", Dir.pwd)
+  exit 0
+end
+
+if options.install_clang_format
+  FileUtils.cp("#{__dir__}/cpp-repo-files/.clang-format", Dir.pwd)
   exit 0
 end
 
@@ -306,8 +316,6 @@ end
 File.open("Makefile", "w") do |file|
   file.write(renderer.result())
 end
-
-FileUtils.cp("#{__dir__}/cpp-repo-files/.clang-format", Dir.pwd)
 
 puts "Done!"
 

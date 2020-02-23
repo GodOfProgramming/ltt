@@ -1,4 +1,4 @@
-#include "log.hpp"
+#include "dash/log.hpp"
 
 #include <sstream>
 

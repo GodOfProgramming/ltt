@@ -1,7 +1,8 @@
-#include <cspec.hpp>
 #include <mutex>
-#include "wait_group.hpp"
-#include "fiber.hpp"
+#include "fiber/wait_group.hpp"
+#include "fiber/fiber.hpp"
+
+#include <cspec.hpp>
 
 using namespace std::chrono_literals;
 

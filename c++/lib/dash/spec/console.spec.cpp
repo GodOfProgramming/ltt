@@ -1,9 +1,10 @@
-#include <cspec.hpp>
 #include "dash/console.hpp"
 
 #include <cstring>
 #include <sstream>
 #include <regex>
+
+#include <cspec.hpp>
 
 Eval(Console)
 {

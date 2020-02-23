@@ -1,5 +1,5 @@
-#include "bundle.hpp"
-#include "wait_group.hpp"
+#include "fiber/bundle.hpp"
+#include "fiber/wait_group.hpp"
 
 #include <cspec.hpp>
 
