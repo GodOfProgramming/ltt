@@ -12,4 +12,7 @@
 # printf "\x1invalidpacket" | nc -u 127.0.0.1 20000 -i 1
 
 # udp-flood "$RELAY_ADDRESS" "$NN_FAKE_PACKET_BIN" "$(($(nproc)/2))" "2048"
-udp-flood "$RELAY_ADDRESS" "$NN_FAKE_PACKET_BIN" "2" "2048"
+
+# size of fake packet = 235 bytes = 1880 bits
+
+udp-flood "$RELAY_ADDRESS" "2" $[2**18] "$NN_FAKE_PACKET_BIN" 

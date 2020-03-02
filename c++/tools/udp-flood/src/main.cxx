@@ -283,8 +283,8 @@ void thread_loop(void* userdata)
 
 int main(int argc, const char* argv[])
 {
-  if (argc < 3) {
-    FATAL("Usage: %s [target] [data file] [optional num threads] [optional packets to send]", argv[0]);
+  if (argc < 2) {
+    FATAL("Usage: %s [target] [optional num threads] [optional packets to send] [data file]", argv[0]);
   }
 
   const char* target = nullptr;
@@ -294,21 +294,23 @@ int main(int argc, const char* argv[])
 
   int send_threads = 1;
   {
-    if (argc >= 4) {
-      send_threads = atoi(argv[3]);
+    if (argc >= 3) {
+      send_threads = atoi(argv[2]);
     }
   }
 
   int packets_in_buf = 1024;
   {
-    if (argc >= 5) {
-      packets_in_buf = atoi(argv[4]);
+    if (argc >= 4) {
+      packets_in_buf = atoi(argv[3]);
     }
   }
 
   const char* filename = nullptr;
   {
-    filename = argv[2];
+    if (argc >= 5) {
+      filename = argv[4];
+    }
   }
 
   std::vector<uint8_t> payload;
@@ -317,20 +319,20 @@ int main(int argc, const char* argv[])
   fds.events = POLLIN;
   auto ret = poll(&fds, 1, 0);
   if (ret == 1) {
-		int flags = fcntl(fds.fd, F_GETFL, 0);
-		if (flags == -1) {
-			fprintf(stderr, "could not get stdin flags\n");
-			return 1;
-		}
-		flags |= O_NONBLOCK;
-		if (fcntl(fds.fd, F_SETFL, flags) < 0) {
-			fprintf(stderr, "could not set stdin flags\n");
-			return 1;
-		}
-		char packetBuff[2048];
-		auto bytesRead = read(fds.fd, packetBuff, sizeof(packetBuff));
-		payload.resize(bytesRead);
-		payload.assign(packetBuff, packetBuff + bytesRead);
+    int flags = fcntl(fds.fd, F_GETFL, 0);
+    if (flags == -1) {
+      fprintf(stderr, "could not get stdin flags\n");
+      return 1;
+    }
+    flags |= O_NONBLOCK;
+    if (fcntl(fds.fd, F_SETFL, flags) < 0) {
+      fprintf(stderr, "could not set stdin flags\n");
+      return 1;
+    }
+    char packetBuff[2048];
+    auto bytesRead = read(fds.fd, packetBuff, sizeof(packetBuff));
+    payload.resize(bytesRead);
+    payload.assign(packetBuff, packetBuff + bytesRead);
   } else {
     std::ifstream ifstr(filename, std::ios::binary);
     {
