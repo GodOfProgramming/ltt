@@ -1,14 +1,29 @@
 #include "common.h"
 #include "defines.h"
 
-/* net.c */
-struct net_addr
+struct NetAddr
 {
   int ipver;
-  struct sockaddr_in sin4;
-  struct sockaddr_in6 sin6;
-  struct sockaddr* sockaddr;
-  int sockaddr_len;
+  sockaddr_in sin4;
+  sockaddr_in6 sin6;
+  sockaddr* addr;
+  int addr_len;
+};
+
+struct State
+{
+  NetAddr* target_addr;
+  int packets_in_buf;
+  const char* payload;
+  int payload_sz;
+  int src_port;
+};
+
+struct Thread
+{
+  pthread_t thread_id;
+  void (*callback)(void* userdata);
+  void* userdata;
 };
 
 const char* str_quote(const char* s)
@@ -50,12 +65,12 @@ void net_set_buffer_size(int cd, int max, int send)
   }
 }
 
-void net_gethostbyname(struct net_addr* shost, const char* host, int port)
+void net_gethostbyname(NetAddr* shost, const char* host, int port)
 {
-  memset(shost, 0, sizeof(struct net_addr));
+  memset(shost, 0, sizeof(NetAddr));
 
-  struct in_addr in_addr;
-  struct in6_addr in6_addr;
+  in_addr in_addr;
+  in6_addr in6_addr;
 
   /* Try ipv4 address first */
   if (inet_pton(AF_INET, host, &in_addr) == 1) {
@@ -72,8 +87,8 @@ void net_gethostbyname(struct net_addr* shost, const char* host, int port)
 
 got_ipv4:
   shost->ipver = 4;
-  shost->sockaddr = (struct sockaddr*)&shost->sin4;
-  shost->sockaddr_len = sizeof(shost->sin4);
+  shost->addr = (sockaddr*)&shost->sin4;
+  shost->addr_len = sizeof(shost->sin4);
   shost->sin4.sin_family = AF_INET;
   shost->sin4.sin_port = htons(port);
   shost->sin4.sin_addr = in_addr;
@@ -81,15 +96,15 @@ got_ipv4:
 
 got_ipv6:
   shost->ipver = 6;
-  shost->sockaddr = (struct sockaddr*)&shost->sin6;
-  shost->sockaddr_len = sizeof(shost->sin4);
+  shost->addr = (sockaddr*)&shost->sin6;
+  shost->addr_len = sizeof(shost->sin4);
   shost->sin6.sin6_family = AF_INET6;
   shost->sin6.sin6_port = htons(port);
   shost->sin6.sin6_addr = in6_addr;
   return;
 }
 
-void parse_addr(struct net_addr* netaddr, const char* addr)
+void parse_addr(NetAddr* netaddr, const char* addr)
 {
   char* colon = const_cast<char*>(strrchr(addr, ':'));
   if (colon == NULL) {
@@ -106,7 +121,7 @@ void parse_addr(struct net_addr* netaddr, const char* addr)
   net_gethostbyname(netaddr, host, port);
 }
 
-const char* addr_to_str(struct net_addr* addr)
+const char* addr_to_str(NetAddr* addr)
 {
   char dst[INET6_ADDRSTRLEN + 1];
   int port = 0;
@@ -130,7 +145,7 @@ const char* addr_to_str(struct net_addr* addr)
   return buf;
 }
 
-int net_bind_udp(struct net_addr* shost, int reuseport)
+int net_bind_udp(NetAddr* shost, int reuseport)
 {
   int sd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (sd < 0) {
@@ -151,23 +166,16 @@ int net_bind_udp(struct net_addr* shost, int reuseport)
     }
   }
 
-  if (bind(sd, shost->sockaddr, shost->sockaddr_len) < 0) {
+  if (bind(sd, shost->addr, shost->addr_len) < 0) {
     PFATAL("bind()");
   }
 
   return sd;
 }
 
-struct thread
-{
-  pthread_t thread_id;
-  void (*callback)(void* userdata);
-  void* userdata;
-};
-
 static void* _thread_start(void* userdata)
 {
-  struct thread* thread = reinterpret_cast<struct thread*>(userdata);
+  Thread* thread = reinterpret_cast<Thread*>(userdata);
 
   /* Direct all signals to main thread. */
   sigset_t set;
@@ -181,9 +189,9 @@ static void* _thread_start(void* userdata)
   return NULL;
 }
 
-struct thread* thread_spawn(void (*callback)(void*), void* userdata)
+Thread* thread_spawn(void (*callback)(void*), void* userdata)
 {
-  struct thread* thread = reinterpret_cast<struct thread*>(calloc(1, sizeof(struct thread)));
+  Thread* thread = reinterpret_cast<Thread*>(calloc(1, sizeof(thread)));
   thread->callback = callback;
   thread->userdata = userdata;
   int r = pthread_create(&thread->thread_id, NULL, _thread_start, thread);
@@ -193,7 +201,7 @@ struct thread* thread_spawn(void (*callback)(void*), void* userdata)
   return thread;
 }
 
-int net_connect_udp(struct net_addr* shost, int src_port)
+int net_connect_udp(NetAddr* shost, int src_port)
 {
   int sd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
   if (sd < 0) {
@@ -207,17 +215,17 @@ int net_connect_udp(struct net_addr* shost, int src_port)
   }
 
   if (src_port > 1 && src_port < 65536) {
-    struct net_addr src;
-    memset(&src, 0, sizeof(struct net_addr));
+    NetAddr src;
+    memset(&src, 0, sizeof(NetAddr));
     char buf[32];
     snprintf(buf, sizeof(buf), "0.0.0.0:%d", src_port);
     parse_addr(&src, buf);
-    if (bind(sd, src.sockaddr, src.sockaddr_len) < 0) {
+    if (bind(sd, src.addr, src.addr_len) < 0) {
       PFATAL("bind()");
     }
   }
 
-  if (-1 == connect(sd, shost->sockaddr, shost->sockaddr_len)) {
+  if (-1 == connect(sd, shost->addr, shost->addr_len)) {
     /* is non-blocking, so we don't get error at that point yet */
     if (EINPROGRESS != errno) {
       PFATAL("connect()");
@@ -228,28 +236,19 @@ int net_connect_udp(struct net_addr* shost, int src_port)
   return sd;
 }
 
-struct state
-{
-  struct net_addr* target_addr;
-  int packets_in_buf;
-  const char* payload;
-  int payload_sz;
-  int src_port;
-};
-
 void thread_loop(void* userdata)
 {
-  struct state* state = reinterpret_cast<struct state*>(userdata);
+  auto state = reinterpret_cast<State*>(userdata);
 
-  struct mmsghdr* messages = reinterpret_cast<struct mmsghdr*>(calloc(state->packets_in_buf, sizeof(struct mmsghdr)));
-  struct iovec* iovecs = reinterpret_cast<struct iovec*>(calloc(state->packets_in_buf, sizeof(struct iovec)));
+  mmsghdr* messages = reinterpret_cast<mmsghdr*>(calloc(state->packets_in_buf, sizeof(mmsghdr)));
+  iovec* iovecs = reinterpret_cast<iovec*>(calloc(state->packets_in_buf, sizeof(iovec)));
 
   int fd = net_connect_udp(state->target_addr, state->src_port);
 
   int i;
   for (i = 0; i < state->packets_in_buf; i++) {
-    struct iovec* iovec = &iovecs[i];
-    struct mmsghdr* msg = &messages[i];
+    iovec* iovec = &iovecs[i];
+    mmsghdr* msg = &messages[i];
 
     msg->msg_hdr.msg_iov = iovec;
     msg->msg_hdr.msg_iovlen = 1;
@@ -258,7 +257,7 @@ void thread_loop(void* userdata)
     iovec->iov_len = state->payload_sz;
   }
 
-  while (1) {
+  while (true) {
     int r = sendmmsg(fd, messages, state->packets_in_buf, 0);
     if (r <= 0) {
       if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
@@ -272,7 +271,7 @@ void thread_loop(void* userdata)
     }
     int i, bytes = 0;
     for (i = 0; i < r; i++) {
-      struct mmsghdr* msg = &messages[i];
+      mmsghdr* msg = &messages[i];
       /* char *buf = msg->msg_hdr.msg_iov->iov_base; */
       int len = msg->msg_len;
       msg->msg_hdr.msg_flags = 0;
@@ -293,11 +292,6 @@ int main(int argc, const char* argv[])
     target = argv[1];
   }
 
-  const char* filename = nullptr;
-  {
-    filename = argv[2];
-  }
-
   int send_threads = 1;
   {
     if (argc >= 4) {
@@ -312,36 +306,61 @@ int main(int argc, const char* argv[])
     }
   }
 
-  std::vector<uint8_t> payload;
-  std::ifstream ifstr(filename, std::ios::binary);
+  const char* filename = nullptr;
   {
-    if (!ifstr) {
-      std::cout << "Could not open: " << filename << std::endl;
-      std::exit(1);
-    }
+    filename = argv[2];
   }
 
-  payload.assign(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
+  std::vector<uint8_t> payload;
+  pollfd fds;
+  fds.fd = fileno(stdin);
+  fds.events = POLLIN;
+  auto ret = poll(&fds, 1, 0);
+  if (ret == 1) {
+		int flags = fcntl(fds.fd, F_GETFL, 0);
+		if (flags == -1) {
+			fprintf(stderr, "could not get stdin flags\n");
+			return 1;
+		}
+		flags |= O_NONBLOCK;
+		if (fcntl(fds.fd, F_SETFL, flags) < 0) {
+			fprintf(stderr, "could not set stdin flags\n");
+			return 1;
+		}
+		char packetBuff[2048];
+		auto bytesRead = read(fds.fd, packetBuff, sizeof(packetBuff));
+		payload.resize(bytesRead);
+		payload.assign(packetBuff, packetBuff + bytesRead);
+  } else {
+    std::ifstream ifstr(filename, std::ios::binary);
+    {
+      if (!ifstr) {
+        std::cout << "Could not open: " << filename << std::endl;
+        std::exit(1);
+      }
+    }
+    payload.assign(std::istreambuf_iterator<char>(ifstr), std::istreambuf_iterator<char>());
+    ifstr.close();
+  }
+
   int payload_sz = payload.size();
 
-  net_addr target_addr;
+  NetAddr target_addr;
   parse_addr(&target_addr, target);
 
   printf(
    "Sending to '%s'\n"
-   "using data from file: '%s'"
    "\nsend buffer contians %d packets, size %d\n"
    "number of threads to spawn: %d\n",
    addr_to_str(&target_addr),
-   filename,
    packets_in_buf,
    payload_sz,
-	 send_threads);
+   send_threads);
 
-  struct state* array_of_states = reinterpret_cast<struct state*>(calloc(send_threads, sizeof(struct state)));
+  State* array_of_states = reinterpret_cast<State*>(calloc(send_threads, sizeof(State)));
 
   for (int t = 0; t < send_threads; t++) {
-    struct state* state = &array_of_states[t];
+    State* state = &array_of_states[t];
     state->target_addr = &target_addr;
     state->packets_in_buf = packets_in_buf;
     state->payload = (char*)payload.data();
@@ -351,18 +370,7 @@ int main(int argc, const char* argv[])
     thread_spawn(thread_loop, state);
   }
 
-  while (1) {
-    struct timeval timeout = NSEC_TIMEVAL(MSEC_NSEC(1000UL));
-    while (1) {
-      int r = select(0, NULL, NULL, NULL, &timeout);
-      if (r != 0) {
-        continue;
-      }
-      if (TIMEVAL_NSEC(&timeout) == 0) {
-        break;
-      }
-    }
-    // pass
-  }
+  getchar();
+
   return 0;
 }
