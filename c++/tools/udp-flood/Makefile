@@ -10,50 +10,71 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 ### Variables ###
 #################
 
-EXE									:= ../../bin/udp-flood
-EXE_SPEC						:= $(EXE).spec
+EXE                 := ../../bin/udp-flood
 
-CXX									:= g++
-CXX_FLAGS 					:= -Wall -Wextra -std=c++17 -O3 -march=native -frename-registers -funroll-loops
+EXE_SPEC            := $(EXE).spec
 
-SRC									:= src
-INCLUDE							:= include
-SPEC								:= spec
-BIN									:= bin
-OBJ									:= obj
+CXX                 := g++
 
-SUB_DIRS						:= $(shell find $(SRC)/* -type d -print)
-OBJ_DIRS						:= $(patsubst $(SRC)/%, $(OBJ)/%, $(SUB_DIRS))
+CXX_FLAGS           := -Wall -Wextra -std=c++17 -O3 -march=native -frename-registers -funroll-loops
 
-MAIN								:= main
-MAIN_CXX						:= $(MAIN).cxx
-MAIN_OBJ						:= $(MAIN).o
+SRC                 := src
 
-INCLUDE_DIRS				:= -I$(INCLUDE) -I$(SRC)  
-INCLUDE_DIRS_SPEC		:= $(INCLUDE_DIRS) -I$(CSPEC_INCLUDE) 
+INCLUDE             := include
 
-STATIC_LIBS					:= 
-STATIC_LIBS_SPEC		:= $(STATIC_LIBS) 
+SPEC                := spec
 
-SHARED_LIBS					:= -lpthread
-SHARED_LIBS_SPEC		:= $(SHARED_LIBS) -lcspec 
+BIN                 := bin
 
-LIBRARY_DIRS				:= 
-LIBRARY_DIRS_SPEC		:= $(LIBRARY_DIRS) 
+OBJ                 := obj
 
-SRC_FILES						:= $(call rwildcard,$(SRC),*.cpp)
+SUB_DIRS            := $(shell find $(SRC)/* -type d -print)
 
-SRC_OBJ_FILES				:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRC_FILES))
-SRC_DEP_FILES				:= $(patsubst $(SRC)/%.cpp, $(OBJ)/%.d, $(SRC_FILES))
+OBJ_DIRS            := $(patsubst $(SRC)/%, $(OBJ)/%, $(SUB_DIRS))
 
-SPEC_FILES					:= $(call rwildcard,$(SPEC),*.spec.cpp)
-SPEC_OBJ_FILES			:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.o, $(SPEC_FILES))
-SPEC_DEP_FILES			:= $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.d, $(SPEC_FILES))
+MAIN                := main
 
-DEPENDENCIES				:= $(SRC_DEP_FILES) $(SPEC_DEP_FILES) 
+MAIN_CXX            := $(MAIN).cxx
 
-OBJECTS							:= $(SRC_OBJ_FILES) $(SPEC_OBJ_FILES)
-EXECUTABLES					:= $(EXE) $(EXE_SPEC)
+MAIN_OBJ            := $(MAIN).o
+
+INCLUDE_DIRS        := -I$(INCLUDE) -I$(SRC)   
+
+INCLUDE_DIRS_SPEC   := $(INCLUDE_DIRS) -I$(CSPEC_INCLUDE)  
+
+STATIC_LIBS         := 
+
+STATIC_LIBS_SPEC    := $(STATIC_LIBS)  
+
+SHARED_LIBS         := -lpthread
+
+SHARED_LIBS_SPEC    := $(SHARED_LIBS) -lcspec  
+
+LIBRARY_DIRS        := 
+
+LIBRARY_DIRS_SPEC   := $(LIBRARY_DIRS_SPEC)  
+
+INSTALL_DIR         := 
+
+SRC_FILES           := $(call rwildcard, $(SRC), *.cpp)
+
+SRC_OBJ_FILES       := $(patsubst $(SRC)/%.cpp, $(OBJ)/%.o, $(SRC_FILES))
+
+SRC_DEP_FILES       := $(patsubst $(SRC)/%.cpp, $(OBJ)/%.d, $(SRC_FILES))
+
+SPEC_FILES          := $(call rwildcard, $(SPEC), *.spec.cpp)
+
+SPEC_OBJ_FILES      := $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.o, $(SPEC_FILES))
+
+SPEC_DEP_FILES      := $(patsubst $(SPEC)/%.spec.cpp, $(OBJ)/%.spec.d, $(SPEC_FILES))
+
+PCH                 := 
+
+DEPENDENCIES        := $(SRC_DEP_FILES) $(SPEC_DEP_FILES)  
+
+OBJECTS             := $(SRC_OBJ_FILES) $(SPEC_OBJ_FILES)
+
+EXECUTABLES         := $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
 
 ################
 ### Targets  ###
@@ -63,27 +84,27 @@ EXECUTABLES					:= $(EXE) $(EXE_SPEC)
 all: setup $(BIN)/$(EXE) $(BIN)/$(EXE_SPEC)
 
 .PHONY: run-tests
-run-tests: $(BIN)/$(EXE_SPEC)
+run-tests: $(BIN)/$(EXE)
 	@$<
 
 .PHONY: run-benchmarks
-run-benchmarks: $(BIN)/$(EXE_SPEC)
+run-benchmarks: $(BIN)/$(EXE)
 	@$< --no-eval --bench
 
 .PHONY: setup
 setup: $(SRC) $(INCLUDE) $(SPEC) $(BIN) $(OBJ) $(OBJ_DIRS)
 
 .PHONY: clean
-clean:
+clean: 
 	-rm -f $(EXECUTABLES) $(OBJECTS) $(DEPENDENCIES) 
 
 .PHONY: force
 force: clean all
 
 .PHONY: check
-check: $(BIN)/$(EXE_SPEC)
+check: $(BIN)/$(EXE)
 	@$<
-	@echo "Passed!"
+	@echo 'Passed!'
 
 .PHONY: ci
 ci: all check
@@ -96,30 +117,31 @@ $(BIN)/$(EXE): $(SRC_OBJ_FILES) $(OBJ)/$(MAIN_OBJ)
 $(BIN)/$(EXE_SPEC): $(SPEC_OBJ_FILES) $(SRC_OBJ_FILES)
 	$(CXX) $(CXX_FLAGS) $(LIBRARY_DIRS_SPEC) $^ $(STATIC_LIBS_SPEC) -o $@ $(SHARED_LIBS_SPEC)
 
-$(OBJ)/$(MAIN_OBJ): $(SRC)/$(MAIN_CXX) 
-	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS) $< 
+$(OBJ)/$(MAIN_OBJ): $(SRC)/$(MAIN_CXX)  
+	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS) $<
 
-$(OBJ)/%.o: $(SRC)/%.cpp Makefile 
-	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS) $< 
+$(OBJ)/%.o: $(SRC)/%.cpp Makefile  
+	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS) $<
 
-$(OBJ)/%.spec.o: $(SPEC)/%.spec.cpp Makefile 
-	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS_SPEC) $< 
+$(OBJ)/%.spec.o: $(SPEC)/%.spec.cpp Makefile  
+	$(CXX) $(CXX_FLAGS) -o $@ -c -MMD -MP $(INCLUDE_DIRS_SPEC) $<
 
-$(SRC):
+$(SRC): 
 	@mkdir -p $@
 
-$(INCLUDE):
+$(INCLUDE): 
 	@mkdir -p $@
 
-$(SPEC):
+$(SPEC): 
 	@mkdir -p $@
 
-$(BIN):
+$(BIN): 
 	@mkdir -p $@
 
-$(OBJ):
+$(OBJ): 
 	@mkdir -p $@
 
-$(OBJ_DIRS):
+$(OBJ_DIRS): 
 	@mkdir -p $@
+
 

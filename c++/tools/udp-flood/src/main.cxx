@@ -292,6 +292,7 @@ int main(int argc, const char* argv[])
   {
     target = argv[1];
   }
+
   const char* filename = nullptr;
   {
     filename = argv[2];
@@ -326,8 +327,16 @@ int main(int argc, const char* argv[])
   net_addr target_addr;
   parse_addr(&target_addr, target);
 
-  fprintf(
-   stderr, "[*] Sending to %s, send buffer %i packets, size %i\n", addr_to_str(&target_addr), packets_in_buf, payload_sz);
+  printf(
+   "Sending to '%s'\n"
+   "using data from file: '%s'"
+   "\nsend buffer contians %d packets, size %d\n"
+   "number of threads to spawn: %d\n",
+   addr_to_str(&target_addr),
+   filename,
+   packets_in_buf,
+   payload_sz,
+	 send_threads);
 
   struct state* array_of_states = reinterpret_cast<struct state*>(calloc(send_threads, sizeof(struct state)));
 
