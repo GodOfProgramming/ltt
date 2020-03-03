@@ -72,36 +72,24 @@ void net_gethostbyname(NetAddr* shost, const char* host, int port)
   in_addr in_addr;
   in6_addr in6_addr;
 
-  /* Try ipv4 address first */
   if (inet_pton(AF_INET, host, &in_addr) == 1) {
-    goto got_ipv4;
+    shost->ipver = 4;
+    shost->addr = (sockaddr*)&shost->sin4;
+    shost->addr_len = sizeof(shost->sin4);
+    shost->sin4.sin_family = AF_INET;
+    shost->sin4.sin_port = htons(port);
+    shost->sin4.sin_addr = in_addr;
+  } else if (inet_pton(AF_INET6, host, &in6_addr) == 1) {
+    shost->ipver = 6;
+    shost->addr = (sockaddr*)&shost->sin6;
+    shost->addr_len = sizeof(shost->sin4);
+    shost->sin6.sin6_family = AF_INET6;
+    shost->sin6.sin6_port = htons(port);
+    shost->sin6.sin6_addr = in6_addr;
+  } else {
+    FATAL("inet_pton(%s)", str_quote(host));
+    return;
   }
-
-  /* Then ipv6 */
-  if (inet_pton(AF_INET6, host, &in6_addr) == 1) {
-    goto got_ipv6;
-  }
-
-  FATAL("inet_pton(%s)", str_quote(host));
-  return;
-
-got_ipv4:
-  shost->ipver = 4;
-  shost->addr = (sockaddr*)&shost->sin4;
-  shost->addr_len = sizeof(shost->sin4);
-  shost->sin4.sin_family = AF_INET;
-  shost->sin4.sin_port = htons(port);
-  shost->sin4.sin_addr = in_addr;
-  return;
-
-got_ipv6:
-  shost->ipver = 6;
-  shost->addr = (sockaddr*)&shost->sin6;
-  shost->addr_len = sizeof(shost->sin4);
-  shost->sin6.sin6_family = AF_INET6;
-  shost->sin6.sin6_port = htons(port);
-  shost->sin6.sin6_addr = in6_addr;
-  return;
 }
 
 void parse_addr(NetAddr* netaddr, const char* addr)
@@ -110,13 +98,17 @@ void parse_addr(NetAddr* netaddr, const char* addr)
   if (colon == NULL) {
     FATAL("You forgot to specify port");
   }
+
   int port = atoi(colon + 1);
   if (port < 0 || port > 65535) {
     FATAL("Invalid port number %d", port);
   }
+
   char host[255];
   int addr_len = colon - addr > 254 ? 254 : colon - addr;
+
   strncpy(host, addr, addr_len);
+
   host[addr_len] = '\0';
   net_gethostbyname(netaddr, host, port);
 }

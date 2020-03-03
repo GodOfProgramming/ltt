@@ -12,3 +12,4 @@ class String
 		base_10? || base_16?
 	end
 end
+
