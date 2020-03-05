@@ -219,10 +219,10 @@ Thread* thread_spawn(void (*callback)(void*), void* userdata, int affinity)
     PFATAL("pthread_create()");
   }
 
-	cpu_set_t cpuset;
-	CPU_ZERO(&cpuset);
-	CPU_SET(affinity, &cpuset);
-	pthread_setaffinity_np(thread->thread_id, sizeof(cpuset), &cpuset);
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  CPU_SET(affinity, &cpuset);
+  pthread_setaffinity_np(thread->thread_id, sizeof(cpuset), &cpuset);
 
   return thread;
 }
@@ -270,8 +270,8 @@ void thread_loop(void* userdata)
     }
   }
 
-	delete[] messages;
-	delete[] iovecs;
+  delete[] messages;
+  delete[] iovecs;
 }
 
 int main(int argc, const char* argv[])
@@ -367,7 +367,7 @@ int main(int argc, const char* argv[])
 
   getchar();
 
-	delete[] array_of_states;
+  delete[] array_of_states;
 
   return 0;
 }

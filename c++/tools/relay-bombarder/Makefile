@@ -1,4 +1,4 @@
-# cpp-repo-init.rb --include '$(HOME)/lib'
+# cpp-repo-init.rb -e '../../bin/relay-bombarder' --shared 'pthread'
 
 #################
 ### Functions ###
@@ -10,7 +10,7 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 ### Variables ###
 #################
 
-EXE                 := ftypes
+EXE                 := ../../bin/relay-bombarder
 
 EXE_SPEC            := $(EXE).spec
 
@@ -38,7 +38,7 @@ MAIN_CXX            := $(MAIN).cxx
 
 MAIN_OBJ            := $(MAIN).o
 
-INCLUDE_DIRS        := -I$(INCLUDE) -I$(SRC)  -I$(HOME)/lib 
+INCLUDE_DIRS        := -I$(INCLUDE) -I$(SRC)   
 
 INCLUDE_DIRS_SPEC   := $(INCLUDE_DIRS) -I$(CSPEC_INCLUDE)  
 
@@ -46,7 +46,7 @@ STATIC_LIBS         :=
 
 STATIC_LIBS_SPEC    := $(STATIC_LIBS)  
 
-SHARED_LIBS         := 
+SHARED_LIBS         := -lpthread
 
 SHARED_LIBS_SPEC    := $(SHARED_LIBS) -lcspec  
 

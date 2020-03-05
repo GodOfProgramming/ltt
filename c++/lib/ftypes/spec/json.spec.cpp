@@ -1,4 +1,5 @@
 #include "ftypes/json.hpp"
+#include <cstdlib>
 
 #include <cspec.hpp>
 
