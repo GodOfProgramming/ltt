@@ -2,5 +2,6 @@
   "files.associations": {
     "*.makefile": "makefile",
     "optional": "cpp"
-  }
+  },
+  "clang-tidy.compilerArgs": ["-Iinclude"]
 }

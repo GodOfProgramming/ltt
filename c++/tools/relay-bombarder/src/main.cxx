@@ -228,27 +228,33 @@ int main(int argc, const char* argv[])
   auto straddr = net::addr_to_str(target_addr);
   printf(
    "Sending to '%s'\n"
-   "\nsend buffer contains %d packets, size %lu\n"
+	 "route request token size %lu\n"
+   "send buffer contains %d packets, continue token size %lu\n"
    "number of threads to spawn: %d\n",
    straddr.c_str(),
+	 route_token.size(),
    packets_in_buf,
    cont_token.size(),
    send_threads);
 
-  bool quit = false;
+	std::cout << "sending route request\n";
 
-  std::vector<State> continue_states;
-  continue_states.resize(send_threads);
-	
 	// send the route request
   {
     auto fd = net::connect_udp(target_addr);
-    sendto(fd, route_token.data(), route_token.size() * sizeof(uint8_t), 0, target_addr.addr, sizeof(target_addr.addr_len));
-    std::this_thread::sleep_for(30ms);
+    send(fd, route_token.data(), route_token.size() * sizeof(uint8_t), 0);
+		shutdown(fd, SHUT_RDWR);
   }
+
+  std::vector<State> continue_states;
+  continue_states.resize(send_threads);
 
   std::vector<std::unique_ptr<std::thread>> threads;
   threads.resize(send_threads);
+
+  bool quit = false;
+
+	std::cout << "sending continue tokens\n";
 
   for (int t = 0; t < send_threads; t++) {
     auto state = &continue_states[t];
@@ -266,7 +272,7 @@ int main(int argc, const char* argv[])
     pthread_setaffinity_np(threads[t]->native_handle(), sizeof(cpuset), &cpuset);
   }
 
-  getchar();
+	std::cout << "press any key to stop... " << getchar();
 
   quit = true;
 
