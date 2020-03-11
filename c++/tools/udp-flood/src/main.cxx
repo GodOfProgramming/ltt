@@ -94,10 +94,12 @@ namespace net
       PFATAL("socket()");
     }
 
+		std::cout << "Binding to " << addr_to_str(bind_addr) << std::endl;
     if (bind(sd, bind_addr.addr, bind_addr.addr_len) < 0) {
       PFATAL("bind()");
     }
-
+		
+		std::cout << "Connecting to to " << addr_to_str(target_addr) << std::endl;
     if (-1 == connect(sd, target_addr.addr, target_addr.addr_len)) {
       /* is non-blocking, so we don't get error at that point yet */
       if (EINPROGRESS != errno) {
