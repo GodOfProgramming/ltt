@@ -87,21 +87,18 @@ namespace net
     return retval;
   }
 
-  int connect_udp(Addr& shost)
+  int connect_udp(Addr& bind_addr, Addr& target_addr)
   {
     int sd = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
     if (sd < 0) {
       PFATAL("socket()");
     }
 
-    Addr bind_addr;
-    memset(&bind_addr, 0, sizeof(Addr));
-    parse_addr(bind_addr, "127.0.0.1:0");
     if (bind(sd, bind_addr.addr, bind_addr.addr_len) < 0) {
       PFATAL("bind()");
     }
 
-    if (-1 == connect(sd, shost.addr, shost.addr_len)) {
+    if (-1 == connect(sd, target_addr.addr, target_addr.addr_len)) {
       /* is non-blocking, so we don't get error at that point yet */
       if (EINPROGRESS != errno) {
         PFATAL("connect()");
@@ -115,6 +112,7 @@ namespace net
 
 struct State
 {
+  net::Addr* bind_addr;
   net::Addr* target_addr;
   int packets_in_buf;
   uint8_t* payload;
@@ -129,7 +127,7 @@ void thread_loop(const bool& quit, State* state)
   std::vector<iovec> iovecs;
   iovecs.resize(state->packets_in_buf);
 
-  int fd = net::connect_udp(*state->target_addr);
+  int fd = net::connect_udp(*state->bind_addr, *state->target_addr);
 
   for (int i = 0; i < state->packets_in_buf; i++) {
     iovec* iovec = &iovecs[i];
@@ -231,9 +229,17 @@ int main(int argc, const char* argv[])
     }
   }
 
+  const char* bind_addr_str = "127.0.0.1:51034";
+  {
+    if (argc >= 6) {
+      bind_addr_str = argv[5];
+    }
+  }
+
   auto payload = get_payload(filename);
 
-  net::Addr target_addr;
+  net::Addr target_addr, bind_addr;
+  net::parse_addr(bind_addr, bind_addr_str);
   net::parse_addr(target_addr, target);
 
   auto straddr = net::addr_to_str(target_addr);
@@ -247,15 +253,16 @@ int main(int argc, const char* argv[])
    send_threads);
 
   std::vector<State> states;
-	states.resize(send_threads);
+  states.resize(send_threads);
 
   std::vector<std::unique_ptr<std::thread>> threads;
   threads.resize(send_threads);
 
-	bool quit = false;
+  bool quit = false;
 
   for (int t = 0; t < send_threads; t++) {
     State* state = &states[t];
+    state->bind_addr = &bind_addr;
     state->target_addr = &target_addr;
     state->packets_in_buf = packets_in_buf;
     state->payload = payload.data();
@@ -270,7 +277,7 @@ int main(int argc, const char* argv[])
     pthread_setaffinity_np(threads[t]->native_handle(), sizeof(cpuset), &cpuset);
   }
 
-	std::cout << "press any key to stop... " << getchar();
+  std::cout << "press any key to stop... " << getchar();
 
   quit = true;
 
