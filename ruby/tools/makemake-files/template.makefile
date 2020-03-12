@@ -1,5 +1,3 @@
-# <%= derive_autogen_commands(options) %>
-
 #################
 ### Functions ###
 #################
@@ -9,17 +7,17 @@ rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(su
 #################
 ### Variables ###
 #################
-<% for var in all_vars %>
+<% for var in $VARS %>
 <%= var -%>
 <% end %>
 ################
 ### Targets  ###
 ################
-<% for target in phony_targets %>
+<% for target in $PHONY_TARGETS %>
 <%= target -%>
 <% end %>
 -include $(DEPENDENCIES)
-<% for target in real_targets %>
+<% for target in $REAL_TARGETS %>
 <%= target -%>
 <% end %>
 
