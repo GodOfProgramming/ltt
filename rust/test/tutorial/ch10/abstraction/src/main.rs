@@ -27,17 +27,17 @@ where
 
 fn largest_ref<T>(list: &[T]) -> &T
 where
-  T: PartialOrd + Copy,
+  T: PartialOrd,
 {
-  let mut largest_indx = 0;
+  let mut largest = &list[0];
 
-  for (i, &item) in list.iter().enumerate() {
-    if item > list[largest_indx] {
-      largest_indx = i;
+  for &item in list {
+    if item > *largest {
+      *largest = item;
     }
   }
 
-  &list[largest_indx]
+  largest
 }
 
 fn main() {
