@@ -23,6 +23,7 @@ namespace json
   {
    public:
     JSON();
+    JSON(JSON& other);
     ~JSON() = default;
 
     /* Parses the document. Returns true if no parse errors */
@@ -35,6 +36,10 @@ namespace json
     /* Retrieves the memebr with the specified value */
     template <typename T, typename... Args>
     T get(Args&&... args);
+
+    /* Retrieves the element at the specified index, be sure to check if the document is an array before calling */
+    template <typename T>
+    T at(size_t index);
 
     /* Checks if the member exists */
     template <typename... Args>
@@ -68,6 +73,8 @@ namespace json
 
     std::string err();
 
+    JSON& operator=(JSON& other);
+
    private:
     rapidjson::Document mDoc;
     std::string mErr;
@@ -98,14 +105,16 @@ namespace json
     /* Pushes a single string literal */
     template <size_t Size>
     void pushBack(char const (&value)[Size]);
-
-    /* When there are no more arguments this is executed and does nothing */
-    void pushBack();
   };
 
   inline JSON::JSON()
   {
     setObject();  // default to object type
+  }
+
+  inline JSON::JSON(JSON& other)
+  {
+    *this = other;
   }
 
   inline bool JSON::parse(const std::string& data)
@@ -215,6 +224,19 @@ namespace json
     return mErr;
   }
 
+  inline JSON& JSON::operator=(JSON& other)
+  {
+    if (other.isArray()) {
+      mDoc.SetArray();
+    } else {
+      mDoc.SetObject();
+    }
+
+    mDoc.Swap(other.mDoc);
+
+    return *this;
+  }
+
   /* Setters */
 
   template <>
@@ -295,7 +317,13 @@ namespace json
   template <>
   inline void JSON::setValue(rapidjson::Value* member, JSON& other)
   {
-    *member = rapidjson::Value(other.mDoc, mDoc.GetAllocator());
+    if (other.isArray()) {
+      member->SetArray();
+    } else {
+      member->SetObject();
+    }
+
+    member->Swap(other.mDoc);
   }
 
   template <size_t Size>
@@ -366,6 +394,24 @@ namespace json
     return member && member->IsUint64() ? member->GetUint() : 0;
   }
 
+  template <>
+  inline JSON JSON::getValue(rapidjson::Value* member)
+  {
+    JSON doc;
+
+    if (member != nullptr) {
+      member->Swap(doc.mDoc);
+    }
+
+    return doc;
+  }
+
+  template <typename T>
+  T JSON::at(size_t index)
+  {
+    return mDoc[index].Get<T>();
+  }
+
   template <size_t Size>
   rapidjson::Value* JSON::getOrCreateMember(const char* path[Size])
   {
@@ -419,6 +465,12 @@ namespace json
   }
 
   template <>
+  inline void JSON::pushBack(JSON& value)
+  {
+    mDoc.PushBack(value.mDoc, mDoc.GetAllocator());
+  }
+
+  template <>
   inline void JSON::pushBack(const char*& value)
   {
     rapidjson::Value v;
@@ -433,6 +485,4 @@ namespace json
     v.SetString(rapidjson::StringRef(value, Size), mDoc.GetAllocator());
     mDoc.PushBack(v, mDoc.GetAllocator());
   }
-
-  inline void JSON::pushBack() {}
 }  // namespace json
