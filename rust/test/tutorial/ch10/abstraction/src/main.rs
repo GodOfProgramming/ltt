@@ -10,7 +10,10 @@ fn largest(list: &[i32]) -> i32 {
   largest
 }
 
-fn largest_gen<T>(list: &[T]) -> T {
+fn largest_gen<T>(list: &[T]) -> T
+where
+  T: PartialOrd + Copy,
+{
   let mut largest = list[0];
 
   for &item in list {
@@ -20,6 +23,21 @@ fn largest_gen<T>(list: &[T]) -> T {
   }
 
   largest
+}
+
+fn largest_ref<T>(list: &[T]) -> &T
+where
+  T: PartialOrd + Copy,
+{
+  let mut largest_indx = 0;
+
+  for (i, &item) in list.iter().enumerate() {
+    if item > list[largest_indx] {
+      largest_indx = i;
+    }
+  }
+
+  &list[largest_indx]
 }
 
 fn main() {
