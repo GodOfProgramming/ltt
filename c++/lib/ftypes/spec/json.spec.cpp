@@ -26,9 +26,13 @@ Eval(JSON)
     Context("setting values", [] {
       Context("new document", [] {
         It("sets and gets", [] {
-          json::JSON doc, other;
+          json::JSON doc, other, array;
 
-          doc.set(1, "root1");
+          array.setArray();
+
+          array.push("1", 2, "3", "value");
+
+          doc.set("1", "root1");
           doc.set(2, "root2", "child");
           doc.set(json::Object(), "root3");
           doc.set(json::Array(), "root4");
@@ -37,14 +41,15 @@ Eval(JSON)
           other.set(2, "b_value", "c_value");
 
           doc.set(other, "other");
+          doc.set(array, "array");
 
           auto out = doc.toString();
-          Expect(out).toEqual(R"({"root1":1,"root2":{"child":2},"root3":{},"root4":[],"other":{"a_value":1,"b_value":{"c_value":2}}})");
+          Expect(out).toEqual(R"({"root1":"1","root2":{"child":2},"root3":{},"root4":[],"other":{"a_value":1,"b_value":{"c_value":2}},"array":["1",2,"3","value"]})");
 
-          int root1 = doc.get<int>("root1");
+          const char* root1 = doc.get<const char*>("root1");
           int root2_child = doc.get<int>("root2", "child");
 
-          Expect(root1).toEqual(1);
+          Expect(root1).toEqual("1");
           Expect(root2_child).toEqual(2);
         });
       });
