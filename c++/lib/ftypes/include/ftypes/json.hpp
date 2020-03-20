@@ -1,6 +1,7 @@
 #pragma once
 #include <sstream>
 #include <vector>
+#include <cinttypes>
 #include <rapidjson/rapidjson.h>
 #include <rapidjson/document.h>
 #include <rapidjson/prettywriter.h>
@@ -29,7 +30,7 @@ namespace json
 
     /* Sets the member with the specified value */
     template <typename T, typename... Args>
-    void set(T value, Args&&... args)
+    void set(T&& value, Args&&... args)
     {
       const char* path[sizeof...(args)] = {args...};
       auto member = getOrCreateMember<sizeof...(args)>(path);
@@ -83,7 +84,7 @@ namespace json
     std::string mErr;
 
     template <typename T>
-    void setValue(rapidjson::Value* member, T value);
+    void setValue(rapidjson::Value* member, T&& value);
 
     template <typename T>
     T getValue(rapidjson::Value* member);
@@ -168,60 +169,84 @@ namespace json
   /* Setters */
 
   template <>
-  inline void JSON::setValue(rapidjson::Value* member, std::string str)
+  inline void JSON::setValue(rapidjson::Value* member, std::string& str)
   {
     member->SetString(rapidjson::StringRef(str.c_str()), mDoc.GetAllocator());
   }
 
   template <>
-  inline void JSON::setValue(rapidjson::Value* member, const char* str)
+  inline void JSON::setValue(rapidjson::Value* member, const char*& str)
   {
     member->SetString(rapidjson::StringRef(str), mDoc.GetAllocator());
   }
 
   template <>
-  inline void JSON::setValue(rapidjson::Value* member, int i)
+  inline void JSON::setValue(rapidjson::Value* member, int& i)
   {
     member->SetInt(i);
   }
 
   template <>
-  inline void JSON::setValue(rapidjson::Value* member, unsigned int i)
-  {
-    member->SetUint(i);
-  }
-
-  template <>
-  inline void JSON::setValue(rapidjson::Value* member, bool b)
+  inline void JSON::setValue(rapidjson::Value* member, bool& b)
   {
     member->SetBool(b);
   }
 
   template <>
-  inline void JSON::setValue(rapidjson::Value* member, float f)
+  inline void JSON::setValue(rapidjson::Value* member, float& f)
   {
     member->SetFloat(f);
   }
 
   template <>
-  inline void JSON::setValue(rapidjson::Value* member, rapidjson::Value* value)
+  inline void JSON::setValue(rapidjson::Value* member, rapidjson::Value*& value)
   {
     member->SetObject();
     *member = rapidjson::Value(*value, mDoc.GetAllocator());
   }
 
   template <>
-  inline void JSON::setValue(rapidjson::Value* member, Object object)
+  inline void JSON::setValue(rapidjson::Value* member, Object& object)
   {
     (void)object;
     member->SetObject();
   }
 
   template <>
-  inline void JSON::setValue(rapidjson::Value* member, Array array)
+  inline void JSON::setValue(rapidjson::Value* member, Array& array)
   {
     (void)array;
     member->SetArray();
+  }
+
+  template <>
+  inline void JSON::setValue(rapidjson::Value* member, uint8_t& value)
+  {
+    member->SetUint(value);
+  }
+
+  template <>
+  inline void JSON::setValue(rapidjson::Value* member, uint16_t& value)
+  {
+    member->SetUint(value);
+  }
+
+  template <>
+  inline void JSON::setValue(rapidjson::Value* member, uint32_t& value)
+  {
+    member->SetUint(value);
+  }
+
+  template <>
+  inline void JSON::setValue(rapidjson::Value* member, uint64_t& value)
+  {
+    member->SetUint64(value);
+  }
+
+  template <>
+  inline void JSON::setValue(rapidjson::Value* member, JSON& other)
+  {
+    *member = rapidjson::Value(other.mDoc, mDoc.GetAllocator());
   }
 
   /* Getters */
@@ -251,12 +276,6 @@ namespace json
   }
 
   template <>
-  inline unsigned int JSON::getValue(rapidjson::Value* member)
-  {
-    return member && member->IsUint() ? member->GetUint() : 0;
-  }
-
-  template <>
   inline bool JSON::getValue(rapidjson::Value* member)
   {
     return member && member->IsBool() ? member->GetBool() : false;
@@ -266,5 +285,29 @@ namespace json
   inline float JSON::getValue(rapidjson::Value* member)
   {
     return member && member->IsFloat() ? member->GetFloat() : 0.0f;
+  }
+
+  template <>
+  inline uint8_t JSON::getValue(rapidjson::Value* member)
+  {
+    return member && member->IsUint() ? member->GetUint() : 0;
+  }
+
+  template <>
+  inline uint16_t JSON::getValue(rapidjson::Value* member)
+  {
+    return member && member->IsUint() ? member->GetUint() : 0;
+  }
+
+  template <>
+  inline uint32_t JSON::getValue(rapidjson::Value* member)
+  {
+    return member && member->IsUint() ? member->GetUint() : 0;
+  }
+
+  template <>
+  inline uint64_t JSON::getValue(rapidjson::Value* member)
+  {
+    return member && member->IsUint64() ? member->GetUint() : 0;
   }
 }  // namespace json

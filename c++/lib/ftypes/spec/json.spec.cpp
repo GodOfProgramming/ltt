@@ -26,15 +26,20 @@ Eval(JSON)
     Context("setting values", [] {
       Context("new document", [] {
         It("sets and gets", [] {
-          json::JSON doc;
+          json::JSON doc, other;
 
           doc.set(1, "root1");
           doc.set(2, "root2", "child");
           doc.set(json::Object(), "root3");
           doc.set(json::Array(), "root4");
 
+          other.set(1, "a_value");
+          other.set(2, "b_value", "c_value");
+
+          doc.set(other, "other");
+
           auto out = doc.toString();
-          Expect(out).toEqual(R"({"root1":1,"root2":{"child":2},"root3":{},"root4":[]})");
+          Expect(out).toEqual(R"({"root1":1,"root2":{"child":2},"root3":{},"root4":[],"other":{"a_value":1,"b_value":{"c_value":2}}})");
 
           int root1 = doc.get<int>("root1");
           int root2_child = doc.get<int>("root2", "child");
@@ -72,4 +77,3 @@ Eval(JSON)
     });
   });
 }
-
