@@ -59,7 +59,6 @@ Eval(JSON)
     });
 
     Context("getting values", [] {
-      return;
       It("gets the values", [] {
         auto data = R"({
 					"main": {
@@ -83,15 +82,20 @@ Eval(JSON)
         float f = doc.get<float>("main", "float");
         bool b = doc.get<bool>("main", "bool");
         std::string s = doc.get<std::string>("main", "string");
-				json::JSON object = doc.get<json::JSON>("main", "object");
+        json::JSON object = doc.get<json::JSON>("main", "object");
         json::JSON array = doc.get<json::JSON>("main", "array");
 
         Expect(i).toEqual(1);
         Expect(f).toEqual(1.23f);
         Expect(b).toEqual(true);
         Expect(s).toEqual("string");
-				Expect(object.get<int>("value")).toEqual(1);
-        Expect(object.at<int>(2)).toEqual(3);
+        Expect(object.get<int>("value")).toEqual(1);
+
+        int val = 0;
+        array.foreach ([&val](rapidjson::Value& value) -> void {
+          Expect(value.Get<int>()).toEqual(val++ + 1);
+        });
+        Expect(val).toEqual(3);
       });
     });
   });

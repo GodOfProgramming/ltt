@@ -65,6 +65,10 @@ namespace json
     /* Returns true if the document is an object, false otherwise */
     bool isObject();
 
+    /* Iterates over each element if the document is an array and returns true, simply returns false if not an array */
+    template <typename Callback>
+    bool foreach (Callback function);
+
     /* Outputs the document as a compressed string */
     std::string toString();
 
@@ -199,6 +203,20 @@ namespace json
   inline bool JSON::isObject()
   {
     return mDoc.IsObject();
+  }
+
+  template <typename Callback>
+  inline bool JSON::foreach (Callback function)
+  {
+    if (mDoc.IsArray()) {
+      for (auto i = mDoc.Begin(); i != mDoc.End(); i++) {
+        function(*i);
+      }
+
+      return true;
+    }
+
+    return false;
   }
 
   inline std::string JSON::toString()
