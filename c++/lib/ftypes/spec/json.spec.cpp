@@ -6,6 +6,21 @@
 Eval(JSON)
 {
   Describe("class JSON", [] {
+    auto data = R"({
+					"main": {
+						"int": 1,
+						"float": 1.23,
+						"bool": true,
+						"string": "string",
+						"object": {
+							"value": 1
+						},
+            "array": [
+              1, 2, 3
+            ]
+					}
+				})";
+
     Context("parse()", [] {
       Context("invalid document", [] {
         const char* invalid_json = R"({ "foo": 0 )";  // no closing brace
@@ -58,23 +73,8 @@ Eval(JSON)
       });
     });
 
-    Context("getting values", [] {
-      It("gets the values", [] {
-        auto data = R"({
-					"main": {
-						"int": 1,
-						"float": 1.23,
-						"bool": true,
-						"string": "string",
-						"object": {
-							"value": 1
-						},
-            "array": [
-              1, 2, 3
-            ]
-					}
-				})";
-
+    Context("getting values", [&] {
+      It("gets the values", [&] {
         json::JSON doc;
         doc.parse(data);
 
@@ -94,6 +94,34 @@ Eval(JSON)
         int val = 0;
         array.foreach ([&val](rapidjson::Value& value) -> void {
           Expect(value.Get<int>()).toEqual(val++ + 1);
+        });
+        Expect(val).toEqual(3);
+      });
+    });
+
+    Context("memberType()", [&] {
+      It("returns the right type", [&] {
+        json::JSON doc;
+        doc.parse(data);
+
+        Expect(doc.memberType("main", "int")).toEqual(rapidjson::Type::kNumberType);
+        Expect(doc.memberType("main", "float")).toEqual(rapidjson::Type::kNumberType);
+        Expect(doc.memberType("main", "bool")).toEqual(rapidjson::Type::kTrueType);
+        Expect(doc.memberType("main", "string")).toEqual(rapidjson::Type::kStringType);
+        Expect(doc.memberType("main", "object")).toEqual(rapidjson::Type::kObjectType);
+        Expect(doc.memberType("main", "array")).toEqual(rapidjson::Type::kArrayType);
+
+        json::JSON object = doc.get<json::JSON>("main", "object");
+        Expect(object.memberType("value")).toEqual(rapidjson::Type::kNumberType);
+        Expect(doc.memberType("main", "object")).toEqual(rapidjson::Type::kNullType);
+
+        json::JSON array = doc.get<json::JSON>("main", "array");
+        Expect(doc.memberType("main", "array")).toEqual(rapidjson::Type::kNullType);
+
+        int val = 0;
+        array.foreach ([&val](rapidjson::Value& value) -> void {
+          Expect(value.GetType()).toEqual(rapidjson::Type::kNumberType);
+          val++;
         });
         Expect(val).toEqual(3);
       });
