@@ -13,7 +13,7 @@ $CONFIG = {
     "-funroll-loops"
   ],
   include_dirs: ['$(SRC)', '$(INCLUDE)'],
-  include_dirs_spec: ['$(SRC)', '$(INCLUDE)', '$(CSPEC_INCLUDE)'],
+  include_dirs_spec: ['$(SRC)', '$(INCLUDE)'],
   static_libs: [],
   static_libs_spec: [],
   shared_libs: [],

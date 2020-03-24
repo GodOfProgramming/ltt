@@ -9,19 +9,30 @@
 
 #define JSON_GET(json, storage, ...) storage = json.get<decltype(storage)>(__VA_ARGS__)
 
-namespace json
+namespace ftypes
 {
-  /* Entire purpose is to be able to set a field as an array while keeping the rapidjson abstraction */
-  class Array
-  {};
-
-  /* Entire purpose is to be able to set a field as an object while keeping the rapidjson abstraction */
-  class Object
-  {};
-
   class JSON
   {
    public:
+    /* Entire purpose is to be able to set a field as an array while keeping the rapidjson abstraction */
+    class Array
+    {};
+
+    /* Entire purpose is to be able to set a field as an object while keeping the rapidjson abstraction */
+    class Object
+    {};
+
+    enum class Type : uint8_t
+    {
+      Null = rapidjson::Type::kNullType,
+      Object = rapidjson::Type::kObjectType,
+      Array = rapidjson::Type::kArrayType,
+      Number = rapidjson::Type::kNumberType,
+      String = rapidjson::Type::kStringType,
+      False = rapidjson::Type::kFalseType,
+      True = rapidjson::Type::kTrueType
+    };
+
     JSON();
     JSON(JSON& other);
     ~JSON() = default;
@@ -66,11 +77,12 @@ namespace json
     bool isObject();
 
     /* Iterates over each element if the document is an array and returns true, simply returns false if not an array */
-    template <typename Callback>
+    template <typename Callback>  // template so lambdas are used directly and inlined rather than wrapped in a std::function
     bool foreach (Callback function);
 
+    /* Returns true if the specified member's underlying type is correct, false otherwise, even if the member does not exist */
     template <typename... Args>
-    rapidjson::Type memberType(Args&&... args);
+    bool memberIs(Type t, Args&&... args);
 
     /* Outputs the document as a compressed string */
     std::string toString();
@@ -78,7 +90,11 @@ namespace json
     /* Outputs the document as a formatted string */
     std::string toPrettyString();
 
+    /* Returns an internal errors if there is one */
     std::string err();
+
+    /* Returns the internal document */
+    rapidjson::Document& internal();
 
     JSON& operator=(JSON& other);
 
@@ -114,6 +130,16 @@ namespace json
     void pushBack(char const (&value)[Size]);
   };
 
+  inline bool operator==(JSON::Type t1, rapidjson::Type t2)
+  {
+    return static_cast<uint8_t>(t1) == static_cast<uint8_t>(t2);
+  }
+
+  inline bool operator==(rapidjson::Type t1, JSON::Type t2)
+  {
+    return t2 == t1;
+  }
+
   inline JSON::JSON()
   {
     setObject();  // default to object type
@@ -143,7 +169,6 @@ namespace json
   {
     const char* path[sizeof...(args)] = {args...};
     auto member = getOrCreateMember<sizeof...(args)>(path);
-    assert(member != nullptr);
     setValue(member, value);
   }
 
@@ -152,7 +177,6 @@ namespace json
   {
     const char* path[sizeof...(args)] = {args...};
     auto member = getMember<sizeof...(args)>(path);
-    assert(member != nullptr);
     return getValue<T>(member);
   }
 
@@ -168,7 +192,6 @@ namespace json
   {
     const char* path[sizeof...(args)] = {args...};
     auto member = getMember<sizeof...(args)>(path);
-    assert(member != nullptr);
     if (member->HasMember(mem.c_str())) {
       member->EraseMember(mem.c_str());
       return true;
@@ -223,7 +246,7 @@ namespace json
   }
 
   template <typename... Args>
-  rapidjson::Type JSON::memberType(Args&&... args)
+  bool JSON::memberIs(JSON::Type t, Args&&... args)
   {
     const char* path[sizeof...(args)] = {args...};
     const auto size = sizeof...(args);
@@ -233,13 +256,13 @@ namespace json
       auto& str = path[i];
 
       if (!val->HasMember(str)) {
-        return rapidjson::Type::kNullType;
+        return false;
       }
 
       val = &(*val)[str];
     }
 
-    return val->GetType();
+    return val->GetType() == t;
   }
 
   inline std::string JSON::toString()
@@ -267,18 +290,28 @@ namespace json
 
   inline JSON& JSON::operator=(JSON& other)
   {
-    if (other.isArray()) {
-      mDoc.SetArray();
-    } else {
-      mDoc.SetObject();
-    }
-
-    mDoc.Swap(other.mDoc);
-
+    mDoc = std::move(other.mDoc);
     return *this;
   }
 
+  inline rapidjson::Document& JSON::internal()
+  {
+    return mDoc;
+  }
+
   /* Setters */
+
+  template <>
+  inline void JSON::setValue(rapidjson::Value* member, JSON& other)
+  {
+    if (other.isArray()) {
+      member->SetArray();
+    } else {
+      member->SetObject();
+    }
+
+    member->CopyFrom(other.mDoc, mDoc.GetAllocator());
+  }
 
   template <>
   inline void JSON::setValue(rapidjson::Value* member, std::string& str)
@@ -373,25 +406,27 @@ namespace json
     member->SetUint64(value);
   }
 
-  template <>
-  inline void JSON::setValue(rapidjson::Value* member, JSON& other)
-  {
-    if (other.isArray()) {
-      member->SetArray();
-    } else {
-      member->SetObject();
-    }
-
-    member->Swap(other.mDoc);
-  }
-
   template <size_t Size>
-  void JSON::setValue(rapidjson::Value* member, char const (&value)[Size])
+  inline void JSON::setValue(rapidjson::Value* member, char const (&value)[Size])
   {
     member->SetString(rapidjson::StringRef(value, Size), mDoc.GetAllocator());
   }
 
   /* Getters */
+
+  template <>
+  inline JSON JSON::getValue(rapidjson::Value* member)
+  {
+    JSON doc;
+
+    if (member != nullptr) {
+      doc.mDoc.CopyFrom(*member, doc.mDoc.GetAllocator());
+    } else {
+      doc.mDoc.SetNull();
+    }
+
+    return doc;
+  }
 
   template <>
   inline rapidjson::Value* JSON::getValue(rapidjson::Value* member)
@@ -459,20 +494,6 @@ namespace json
   inline uint64_t JSON::getValue(rapidjson::Value* member)
   {
     return (member && member->GetType() == rapidjson::Type::kNumberType) ? member->Get<uint64_t>() : 0;
-  }
-
-  template <>
-  inline JSON JSON::getValue(rapidjson::Value* member)
-  {
-    JSON doc;
-
-    if (member != nullptr) {
-      rapidjson::Value tmp;
-      tmp = std::move(*member);
-      tmp.Swap(doc.mDoc);
-    }
-
-    return doc;
   }
 
   template <typename T>
@@ -554,4 +575,4 @@ namespace json
     v.SetString(rapidjson::StringRef(value, Size), mDoc.GetAllocator());
     mDoc.PushBack(v, mDoc.GetAllocator());
   }
-}  // namespace json
+}  // namespace ftypes

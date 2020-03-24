@@ -4,8 +4,7 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/include",
-                "${env:RAPIDXML_INCLUDE}",
-                "${env:CSPEC_INCLUDE}"
+                "${env:RAPIDXML_INCLUDE}"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/g++",

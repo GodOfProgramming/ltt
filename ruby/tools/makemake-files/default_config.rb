@@ -15,9 +15,7 @@ $CONFIG = {
   include: [
     'include'
   ],
-  include_spec: [
-    ENV['CSPEC_INCLUDE']
-  ],
+  include_spec: [],
   static_libs: [],
   static_libs_spec: [],
   shared_libs: [],

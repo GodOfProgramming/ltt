@@ -1,6 +1,6 @@
 #include "ftypes/xml.hpp"
 
-#include <cspec.hpp>
+#include <cspec/cspec.hpp>
 
 Eval(XML)
 {
@@ -139,4 +139,3 @@ Eval(Node)
     });
   });
 }
-

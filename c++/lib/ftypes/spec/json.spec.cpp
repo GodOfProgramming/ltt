@@ -1,7 +1,7 @@
 #include "ftypes/json.hpp"
 #include <cstdlib>
 
-#include <cspec.hpp>
+#include <cspec/cspec.hpp>
 
 Eval(JSON)
 {
@@ -25,14 +25,14 @@ Eval(JSON)
       Context("invalid document", [] {
         const char* invalid_json = R"({ "foo": 0 )";  // no closing brace
         It("returns false", [&] {
-          json::JSON doc;
+          ftypes::JSON doc;
           Expect(doc.parse(invalid_json)).toEqual(false);
         });
       });
       Context("valid document", [] {
         const char* valid_json = R"({ "foo": 0 })";
         It("returns true", [&] {
-          json::JSON doc;
+          ftypes::JSON doc;
           Expect(doc.parse(valid_json)).toEqual(true);
         });
       });
@@ -40,8 +40,8 @@ Eval(JSON)
 
     Context("setting values", [] {
       Context("new document", [] {
-        It("sets and gets", [] {
-          json::JSON doc, other, array, arrayVal;
+        It("sets", [] {
+          ftypes::JSON doc, other, array, arrayVal, integer;
 
           arrayVal.set(1, "value");
 
@@ -51,8 +51,8 @@ Eval(JSON)
 
           doc.set("1", "root1");
           doc.set(2, "root2", "child");
-          doc.set(json::Object(), "root3");
-          doc.set(json::Array(), "root4");
+          doc.set(ftypes::JSON::Object(), "root3");
+          doc.set(ftypes::JSON::Array(), "root4");
 
           other.set(1, "a_value");
           other.set(2, "b_value", "c_value");
@@ -69,21 +69,24 @@ Eval(JSON)
 
           Expect(root1).toEqual("1");
           Expect(root2_child).toEqual(2);
+
+          integer.set(1);
+          Expect(integer.get<int>()).toEqual(1);
         });
       });
     });
 
     Context("getting values", [&] {
       It("gets the values", [&] {
-        json::JSON doc;
+        ftypes::JSON doc;
         doc.parse(data);
 
         int i = doc.get<int>("main", "int");
         float f = doc.get<float>("main", "float");
         bool b = doc.get<bool>("main", "bool");
         std::string s = doc.get<std::string>("main", "string");
-        json::JSON object = doc.get<json::JSON>("main", "object");
-        json::JSON array = doc.get<json::JSON>("main", "array");
+        ftypes::JSON object = doc.get<ftypes::JSON>("main", "object");
+        ftypes::JSON array = doc.get<ftypes::JSON>("main", "array");
 
         Expect(i).toEqual(1);
         Expect(f).toEqual(1.23f);
@@ -101,22 +104,22 @@ Eval(JSON)
 
     Context("memberType()", [&] {
       It("returns the right type", [&] {
-        json::JSON doc;
+        ftypes::JSON doc;
         doc.parse(data);
 
-        Expect(doc.memberType("main", "int")).toEqual(rapidjson::Type::kNumberType);
-        Expect(doc.memberType("main", "float")).toEqual(rapidjson::Type::kNumberType);
-        Expect(doc.memberType("main", "bool")).toEqual(rapidjson::Type::kTrueType);
-        Expect(doc.memberType("main", "string")).toEqual(rapidjson::Type::kStringType);
-        Expect(doc.memberType("main", "object")).toEqual(rapidjson::Type::kObjectType);
-        Expect(doc.memberType("main", "array")).toEqual(rapidjson::Type::kArrayType);
+        Expect(doc.memberIs(ftypes::JSON::Type::Number, "main", "int")).toEqual(true);
+        Expect(doc.memberIs(ftypes::JSON::Type::Number, "main", "float")).toEqual(true);
+        Expect(doc.memberIs(ftypes::JSON::Type::True, "main", "bool")).toEqual(true);
+        Expect(doc.memberIs(ftypes::JSON::Type::String, "main", "string")).toEqual(true);
+        Expect(doc.memberIs(ftypes::JSON::Type::Object, "main", "object")).toEqual(true);
+        Expect(doc.memberIs(ftypes::JSON::Type::Array, "main", "array")).toEqual(true);
 
-        json::JSON object = doc.get<json::JSON>("main", "object");
-        Expect(object.memberType("value")).toEqual(rapidjson::Type::kNumberType);
-        Expect(doc.memberType("main", "object")).toEqual(rapidjson::Type::kNullType);
+        ftypes::JSON object = doc.get<ftypes::JSON>("main", "object");
+        Expect(object.memberIs(ftypes::JSON::Type::Number, "value")).toEqual(true);
+        Expect(doc.memberIs(ftypes::JSON::Type::Object, "main", "object")).toEqual(true);
 
-        json::JSON array = doc.get<json::JSON>("main", "array");
-        Expect(doc.memberType("main", "array")).toEqual(rapidjson::Type::kNullType);
+        ftypes::JSON array = doc.get<ftypes::JSON>("main", "array");
+        Expect(doc.memberIs(ftypes::JSON::Type::Array, "main", "array")).toEqual(true);
 
         int val = 0;
         array.foreach ([&val](rapidjson::Value& value) -> void {
@@ -124,12 +127,15 @@ Eval(JSON)
           val++;
         });
         Expect(val).toEqual(3);
+
+        ftypes::JSON null = doc.get<ftypes::JSON>("main", "doesnotexist");
+        Expect(null.memberIs(ftypes::JSON::Type::Null)).toEqual(true);
       });
     });
   });
 
   Describe("rapidjson tests", [] {
-    It("compiles and works", [] {
+    It("compiles", [] {
       rapidjson::Document d, x;
       d.SetObject();
       rapidjson::Value v;
