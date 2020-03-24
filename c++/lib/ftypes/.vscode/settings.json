@@ -20,6 +20,16 @@
     "type_traits": "cpp",
     "utility": "cpp",
     "*.cuh": "cpp",
-    "new": "cpp"
+    "new": "cpp",
+    "chrono": "cpp",
+    "complex": "cpp",
+    "exception": "cpp",
+    "functional": "cpp",
+    "istream": "cpp",
+    "ostream": "cpp",
+    "numeric": "cpp",
+    "streambuf": "cpp",
+    "cmath": "cpp",
+    "typeinfo": "cpp"
   }
 }

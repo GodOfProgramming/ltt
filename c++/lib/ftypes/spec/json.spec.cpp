@@ -6,7 +6,7 @@
 Eval(JSON)
 {
   Describe("class JSON", [] {
-    auto data = R"({
+    std::string data = R"({
 					"main": {
 						"int": 1,
 						"float": 1.23,
@@ -23,17 +23,27 @@ Eval(JSON)
 
     Context("parse()", [] {
       Context("invalid document", [] {
-        const char* invalid_json = R"({ "foo": 0 )";  // no closing brace
+        std::string invalid_json = R"({ "foo": 0 )";  // no closing brace
         It("returns false", [&] {
           ftypes::JSON doc;
           Expect(doc.parse(invalid_json)).toEqual(false);
         });
       });
+
       Context("valid document", [] {
-        const char* valid_json = R"({ "foo": 0 })";
+        std::string valid_json = R"({ "foo": 0 })";
         It("returns true", [&] {
           ftypes::JSON doc;
           Expect(doc.parse(valid_json)).toEqual(true);
+        });
+      });
+
+      Context("vector<char>", [] {
+        It("returns true", [] {
+          std::string valid_json = R"({ "foo": 0 })";
+          std::vector<char> vec(valid_json.begin(), valid_json.end());
+          ftypes::JSON doc;
+          Expect(doc.parse(vec)).toEqual(true);
         });
       });
     });
@@ -130,6 +140,57 @@ Eval(JSON)
 
         ftypes::JSON null = doc.get<ftypes::JSON>("main", "doesnotexist");
         Expect(null.memberIs(ftypes::JSON::Type::Null)).toEqual(true);
+      });
+    });
+
+    Context("push()", [] {
+      It("pushes array values", [] {
+        auto expectedJson = R"([{"value":"value one"},{"value":"value two"},{"value":"value three"}])";
+        ftypes::JSON array, valueOne, valueTwo, valueThree;
+        array.setArray();
+        valueOne.set("value one", "value");
+        valueTwo.set("value two", "value");
+        valueThree.set("value three", "value");
+        array.push(valueOne, valueTwo, valueThree);
+
+        Expect(array.toString()).toEqual(expectedJson);
+      });
+    });
+
+    Context("foreach()", [] {
+      It("loops", [] {
+        std::string json = R"([
+          {
+            "x": "x value"
+          },
+          {
+            "y": "y value"
+          }
+        ])";
+
+        ftypes::JSON doc;
+
+        Expect(doc.parse(json)).toEqual(true);
+        Expect(doc.err()).toEqual("");
+
+        int count = 0;
+        Expect(doc.foreach ([&count](rapidjson::Value& value) {
+          bool gotOneOrTheOther = false;
+          if (value.HasMember("x")) {
+            Expect(value["x"].GetString()).toEqual("x value");
+            gotOneOrTheOther = true;
+          }
+
+          if (value.HasMember("y")) {
+            Expect(value["y"].GetString()).toEqual("y value");
+            gotOneOrTheOther = true;
+          }
+
+          Expect(gotOneOrTheOther).toEqual(true);
+          count++;
+        })).toEqual(true);
+
+        Expect(count).toEqual(2);
       });
     });
   });

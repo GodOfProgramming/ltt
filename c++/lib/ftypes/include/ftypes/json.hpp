@@ -37,8 +37,11 @@ namespace ftypes
     JSON(JSON& other);
     ~JSON() = default;
 
-    /* Parses the document. Returns true if no parse errors */
-    bool parse(const std::string& data);
+    /* Parses the document. Returns true if no errors.
+     * Can be anything that supplies a char* through T::data() and size through T::size();
+     */
+    template <typename T>
+    bool parse(const T& data);
 
     /* Sets the member with the specified value */
     template <typename T, typename... Args>
@@ -150,14 +153,15 @@ namespace ftypes
     *this = other;
   }
 
-  inline bool JSON::parse(const std::string& data)
+  template <typename T>
+  inline bool JSON::parse(const T& raw)
   {
-    rapidjson::ParseResult result = mDoc.Parse(data.c_str());
-    std::stringstream error_stream;
+    rapidjson::ParseResult result = mDoc.Parse(raw.data(), raw.size());
 
     if (!result && mDoc.HasParseError()) {
-      error_stream << "Document parse error: " << mDoc.GetParseError();
-      mErr = error_stream.str();
+      std::stringstream errorStream;
+      errorStream << "Document parse error: " << mDoc.GetParseError();
+      mErr = errorStream.str();
       return false;
     }
 
