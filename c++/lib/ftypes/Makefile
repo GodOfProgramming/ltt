@@ -1,5 +1,3 @@
-# cpp-repo-init.rb --include '$(HOME)/lib'
-
 #################
 ### Functions ###
 #################
@@ -38,21 +36,21 @@ MAIN_CXX            := $(MAIN).cxx
 
 MAIN_OBJ            := $(MAIN).o
 
-INCLUDE_DIRS        := -I$(INCLUDE) -I$(SRC)  -I$(HOME)/lib 
+INCLUDE_DIRS        := -I$(SRC) -I$(INCLUDE) -I$(RAPIDXML_INCLUDE) 
 
-INCLUDE_DIRS_SPEC   := $(INCLUDE_DIRS) -I$(CSPEC_INCLUDE)  
+INCLUDE_DIRS_SPEC   := -I$(SRC) -I$(INCLUDE)
 
 STATIC_LIBS         := 
 
-STATIC_LIBS_SPEC    := $(STATIC_LIBS)  
+STATIC_LIBS_SPEC    := 
 
 SHARED_LIBS         := 
 
-SHARED_LIBS_SPEC    := $(SHARED_LIBS) -lcspec  
+SHARED_LIBS_SPEC    := -lcspec
 
 LIBRARY_DIRS        := 
 
-LIBRARY_DIRS_SPEC   := $(LIBRARY_DIRS_SPEC)  
+LIBRARY_DIRS_SPEC   := 
 
 INSTALL_DIR         := 
 

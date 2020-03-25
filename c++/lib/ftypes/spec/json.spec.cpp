@@ -61,8 +61,6 @@ Eval(JSON)
 
           doc.set("1", "root1");
           doc.set(2, "root2", "child");
-          doc.set(ftypes::JSON::Object(), "root3");
-          doc.set(ftypes::JSON::Array(), "root4");
 
           other.set(1, "a_value");
           other.set(2, "b_value", "c_value");
@@ -72,7 +70,7 @@ Eval(JSON)
 
           auto out = doc.toString();
           Expect(out).toEqual(
-           R"({"root1":"1","root2":{"child":2},"root3":{},"root4":[],"other":{"a_value":1,"b_value":{"c_value":2}},"array":["1",2,"3","value",{"value":1}]})");
+           R"({"root1":"1","root2":{"child":2},"other":{"a_value":1,"b_value":{"c_value":2}},"array":["1",2,"3","value",{"value":1}]})");
 
           const char* root1 = doc.get<const char*>("root1");
           int root2_child = doc.get<int>("root2", "child");
@@ -104,10 +102,19 @@ Eval(JSON)
         Expect(s).toEqual("string");
         Expect(object.get<int>("value")).toEqual(1);
 
+        // manual member extraction
+        Expect(doc["main"]["int"].Get<int>()).toEqual(1);
+
+        // manual array extraction
+        Expect(array[0].Get<int>()).toEqual(1);
+        Expect(array[1].Get<int>()).toEqual(2);
+        Expect(array[2].Get<int>()).toEqual(3);
+
         int val = 0;
-        array.foreach ([&val](rapidjson::Value& value) -> void {
+        Expect(array.foreach([&val](rapidjson::Value& value) -> void {
           Expect(value.Get<int>()).toEqual(val++ + 1);
-        });
+        }))
+         .toEqual(true);
         Expect(val).toEqual(3);
       });
     });
@@ -132,7 +139,7 @@ Eval(JSON)
         Expect(doc.memberIs(ftypes::JSON::Type::Array, "main", "array")).toEqual(true);
 
         int val = 0;
-        array.foreach ([&val](rapidjson::Value& value) -> void {
+        array.foreach([&val](rapidjson::Value& value) -> void {
           Expect(value.GetType()).toEqual(rapidjson::Type::kNumberType);
           val++;
         });
@@ -174,7 +181,7 @@ Eval(JSON)
         Expect(doc.err()).toEqual("");
 
         int count = 0;
-        Expect(doc.foreach ([&count](rapidjson::Value& value) {
+        Expect(doc.foreach([&count](rapidjson::Value& value) {
           bool gotOneOrTheOther = false;
           if (value.HasMember("x")) {
             Expect(value["x"].GetString()).toEqual("x value");
@@ -188,7 +195,8 @@ Eval(JSON)
 
           Expect(gotOneOrTheOther).toEqual(true);
           count++;
-        })).toEqual(true);
+        }))
+         .toEqual(true);
 
         Expect(count).toEqual(2);
       });

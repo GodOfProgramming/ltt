@@ -14,14 +14,6 @@ namespace ftypes
   class JSON
   {
    public:
-    /* Entire purpose is to be able to set a field as an array while keeping the rapidjson abstraction */
-    class Array
-    {};
-
-    /* Entire purpose is to be able to set a field as an object while keeping the rapidjson abstraction */
-    class Object
-    {};
-
     enum class Type : uint8_t
     {
       Null = rapidjson::Type::kNullType,
@@ -100,6 +92,9 @@ namespace ftypes
     rapidjson::Document& internal();
 
     JSON& operator=(JSON& other);
+
+    rapidjson::Value& operator[](size_t index);
+    rapidjson::Value& operator[](std::string member);
 
    private:
     rapidjson::Document mDoc;
@@ -292,15 +287,25 @@ namespace ftypes
     return mErr;
   }
 
+  inline rapidjson::Document& JSON::internal()
+  {
+    return mDoc;
+  }
+
   inline JSON& JSON::operator=(JSON& other)
   {
     mDoc = std::move(other.mDoc);
     return *this;
   }
 
-  inline rapidjson::Document& JSON::internal()
+  inline rapidjson::Value& JSON::operator[](size_t index)
   {
-    return mDoc;
+    return mDoc[index];
+  }
+
+  inline rapidjson::Value& JSON::operator[](std::string member)
+  {
+    return mDoc[member.c_str()];
   }
 
   /* Setters */
@@ -364,20 +369,6 @@ namespace ftypes
   {
     member->SetObject();
     *member = rapidjson::Value(*value, mDoc.GetAllocator());
-  }
-
-  template <>
-  inline void JSON::setValue(rapidjson::Value* member, Object& object)
-  {
-    (void)object;
-    member->SetObject();
-  }
-
-  template <>
-  inline void JSON::setValue(rapidjson::Value* member, Array& array)
-  {
-    (void)array;
-    member->SetArray();
   }
 
   template <>
