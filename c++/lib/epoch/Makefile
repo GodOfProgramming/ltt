@@ -38,7 +38,7 @@ MAIN_OBJ            := $(MAIN).o
 
 INCLUDE_DIRS        := -I$(SRC) -I$(INCLUDE) 
 
-INCLUDE_DIRS_SPEC   := -I$(SRC) -I$(INCLUDE) -I$(CSPEC_INCLUDE)
+INCLUDE_DIRS_SPEC   := -I$(SRC) -I$(INCLUDE)
 
 STATIC_LIBS         := 
 
