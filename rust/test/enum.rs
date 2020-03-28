@@ -10,5 +10,6 @@ fn main() {
   let thing = match get_str(TestThing::Thing1{ x: 1, y: 2 }) {
     TestThing::Thing1 => .x + obj.y,
   };
+
   println!("thing = {}", thing);
 }
