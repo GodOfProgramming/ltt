@@ -1,5 +1,6 @@
 #pragma once
-#include <rapidxml-1.13/rapidxml.hpp>
+#include <string>
+#include <rapidxml/rapidxml.hpp>
 
 namespace xml
 {

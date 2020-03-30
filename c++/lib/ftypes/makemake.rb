@@ -12,7 +12,7 @@ $CONFIG = {
     "-frename-registers", 
     "-funroll-loops"
   ],
-  include_dirs: ['$(SRC)', '$(INCLUDE)', '$(RAPIDXML_INCLUDE)'],
+  include_dirs: ['$(SRC)', '$(INCLUDE)'],
   include_dirs_spec: ['$(SRC)', '$(INCLUDE)'],
   static_libs: [],
   static_libs_spec: [],

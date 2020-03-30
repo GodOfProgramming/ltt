@@ -36,7 +36,7 @@ MAIN_CXX            := $(MAIN).cxx
 
 MAIN_OBJ            := $(MAIN).o
 
-INCLUDE_DIRS        := -I$(SRC) -I$(INCLUDE) -I$(RAPIDXML_INCLUDE) 
+INCLUDE_DIRS        := -I$(SRC) -I$(INCLUDE) 
 
 INCLUDE_DIRS_SPEC   := -I$(SRC) -I$(INCLUDE)
 
