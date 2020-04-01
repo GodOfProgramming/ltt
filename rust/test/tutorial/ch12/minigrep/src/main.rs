@@ -6,15 +6,17 @@ use minigrep::Args;
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let query = &args[1];
-    let filename = &args[2];
+    let args = match Args::new(&args) {
+      Ok(a) => a,
+      Err(err_str) => {
+        panic!("could not parse arguments! error: {}", err_str);
+      },
+    };
 
-    let args = Args::new(&args);
+    println!("searching for {}", args.query);
+    println!("in file {}", args.filename);
 
-    println!("searching for {}", query);
-    println!("in file {}", filename);
-
-    let contents = fs::read_to_string(filename).expect("Something went wrong reading the file");
+    let contents = fs::read_to_string(args.filename).expect("Something went wrong reading the file");
 
     println!("With text:\n{}", contents);
 }

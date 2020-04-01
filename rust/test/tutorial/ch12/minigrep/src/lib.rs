@@ -1,13 +1,17 @@
-pub struct Args {
-  query: &String,
-  filename: &String,
+pub struct Args<'a> {
+  pub query: &'a String,
+  pub filename: &'a String,
 }
 
-impl Args {
-  pub fn new(args: &[String]) -> Args {
-    Args {
-      query: &args[1],
-      filename: &args[2],
+impl<'a> Args<'a> {
+  pub fn new(args: &[String]) -> Result<Args, &'static str> {
+    if args.len() > 2 {
+      Ok(Args {
+        query: &args[1],
+        filename: &args[2],
+      })
+    } else {
+      Err("need more arguments")
     }
   }
 }
