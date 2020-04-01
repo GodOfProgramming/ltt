@@ -1,22 +1,19 @@
 use std::env;
-use std::fs;
+use std::process;
 
+use minigrep;
 use minigrep::Args;
 
 fn main() {
     let args: Vec<String> = env::args().collect();
 
-    let args = match Args::new(&args) {
-      Ok(a) => a,
-      Err(err_str) => {
-        panic!("could not parse arguments! error: {}", err_str);
-      },
-    };
+    let args = Args::new(&args).unwrap_or_else(|err| {
+        println!("could not parse arguments! error: {}", err);
+        process::exit(1);
+    });
 
-    println!("searching for {}", args.query);
-    println!("in file {}", args.filename);
-
-    let contents = fs::read_to_string(args.filename).expect("Something went wrong reading the file");
-
-    println!("With text:\n{}", contents);
+    if let Err(e) = minigrep::run(&args) {
+      println!("Application error: {}", e);
+      process::exit(1);
+    }
 }
