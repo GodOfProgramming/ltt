@@ -89,7 +89,7 @@ Pick three.";
 
 #[test]
 fn case_sensitive() {
-  let query = "duct"
+  let query = "duct";
   let contents = "\
 Rust:
 safe, fast, productive.

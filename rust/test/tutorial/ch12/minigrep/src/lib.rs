@@ -5,6 +5,7 @@ use std::fs;
 pub struct Args<'a> {
   pub query: &'a String,
   pub filename: &'a String,
+  pub case_sensitive: bool,
 }
 
 impl<'a> Args<'a> {
@@ -29,7 +30,13 @@ impl<'a> PartialEq for Args<'a> {
 pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
   let contents = fs::read_to_string(args.filename)?;
 
-  for line in search(&args.query, &contents) {
+  let results = if args.case_sensitive {
+    search(&args.query, &contents)
+  } else {
+    search_case_insensitive(&args.query, &contents)
+  };
+
+  for line in results {
     println!("{}", line);
   }
 
@@ -41,6 +48,19 @@ pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
 
   for line in contents.lines() {
     if line.contains(query) {
+      results.push(line);
+    }
+  }
+
+  results
+}
+
+pub fn search_case_insensitive<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+  let query = query.to_lowercase();
+  let mut results = Vec::new();
+
+  for line in contents.lines() {
+    if line.to_lowercase().contains(&query) {
       results.push(line);
     }
   }
