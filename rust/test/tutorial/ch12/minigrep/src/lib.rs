@@ -27,14 +27,25 @@ impl<'a> PartialEq for Args<'a> {
 }
 
 pub fn run(args: &Args) -> Result<(), Box<dyn Error>> {
-  println!("searching for {}", args.query);
-  println!("in file {}", args.filename);
-
   let contents = fs::read_to_string(args.filename)?;
 
-  println!("With text:\n{}", contents);
+  for line in search(&args.query, &contents) {
+    println!("{}", line);
+  }
 
   Ok(())
+}
+
+pub fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+  let mut results = Vec::new();
+
+  for line in contents.lines() {
+    if line.contains(query) {
+      results.push(line);
+    }
+  }
+
+  results
 }
 
 #[cfg(test)]
