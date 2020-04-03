@@ -18,6 +18,7 @@ fn args_new_passes_with_right_number_of_args() {
   let expected_args = Args {
     query: &query,
     filename: &filename,
+    case_sensitive: true,
   };
 
   assert_eq!(Args::new(&arg_vec), Ok(expected_args));
@@ -36,6 +37,7 @@ fn args_new_passes_with_more_than_enough_args() {
   let expected_args = Args {
     query: &query,
     filename: &filename,
+    case_sensitive: true,
   };
 
   assert_eq!(Args::new(&arg_vec), Ok(expected_args));
@@ -48,6 +50,7 @@ fn run_returns_error_with_wrong_filename() {
   let args = Args {
     query: &query,
     filename: &filename,
+    case_sensitive: true,
   };
 
   match run(&args) {
@@ -63,6 +66,7 @@ fn run_returns_ok_with_valid_filename() {
   let args = Args {
     query: &query,
     filename: &filename,
+    case_sensitive: true,
   };
 
   match run(&args) {
@@ -74,7 +78,7 @@ fn run_returns_ok_with_valid_filename() {
 /*** from tutorial ***/
 
 #[test]
-fn one_result() {
+fn test_one_result() {
   let query = "duct";
   let contents = "\
 Rust
@@ -88,7 +92,7 @@ Pick three.";
 }
 
 #[test]
-fn case_sensitive() {
+fn test_search_case_sensitive() {
   let query = "duct";
   let contents = "\
 Rust:
@@ -103,7 +107,7 @@ Duck tape.";
 }
 
 #[test]
-fn case_insensitive() {
+fn test_search_case_insensitive() {
  let query = "rUsT";
  let contents = "\
 Rust:

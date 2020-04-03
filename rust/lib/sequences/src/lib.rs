@@ -1,4 +1,4 @@
-pub fn fib(count: i32) -> i32 {
+pub fn fib(count: u128) -> u128 {
   let mut prev = 0;
   let mut curr = 1;
 

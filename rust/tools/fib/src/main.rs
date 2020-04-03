@@ -10,12 +10,7 @@ fn main() {
     process::exit(1);
   }
 
-  let count: i32 = args[1].trim().parse().expect("You need to use a number");
-
-  if count < 0 {
-    println!("You need to use a positive number");
-    process::exit(1);
-  }
+  let count: u128 = args[1].trim().parse().expect("You need to use a positive number");
 
   let result = sequences::fib(count);
 

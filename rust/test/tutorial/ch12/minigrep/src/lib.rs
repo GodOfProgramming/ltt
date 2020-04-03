@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::fs;
+use std::env;
 
 #[derive(Debug)]
 pub struct Args<'a> {
@@ -14,6 +15,7 @@ impl<'a> Args<'a> {
       Ok(Args {
         query: &args[1],
         filename: &args[2],
+        case_sensitive: env::var("CASE_INSENSITIVE").is_err(),
       })
     } else {
       Err("need more arguments")
