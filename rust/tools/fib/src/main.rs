@@ -1,6 +1,6 @@
 use std::env;
 use std::process;
-use fib;
+use sequences;
 
 fn main() {
   let args: Vec<String> = env::args().collect();
@@ -17,7 +17,7 @@ fn main() {
     process::exit(1);
   }
 
-  let result = fib::calculate(count);
+  let result = sequences::fib(count);
 
   println!("{}", result);
 }

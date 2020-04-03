@@ -1,4 +1,4 @@
-pub fn calculate(count: i32) -> i32 {
+pub fn fib(count: i32) -> i32 {
   let mut prev = 0;
   let mut curr = 1;
 
