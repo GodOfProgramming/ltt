@@ -1,6 +1,6 @@
+use std::env;
 use std::error::Error;
 use std::fs;
-use std::env;
 
 #[derive(Debug)]
 pub struct Args<'a> {
