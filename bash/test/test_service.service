@@ -1,0 +1,10 @@
+[Unit]
+Description=Example systemd service.
+
+[Service]
+Type=simple
+ExecStart=/bin/bash /var/test_service.sh
+
+[Install]
+WantedBy=multi-user.target
+
