@@ -1,5 +1,4 @@
-all:
-	echo "ALL"
 
+.PHONY: test
 test:
-	echo "TEST"
+	echo $(EXPORTED_VAR)
