@@ -19,18 +19,19 @@ macro_rules! redis {
 }
 
 fn main() -> std::io::Result<()> {
-  let command = redis!("SET", "foo", "bar");
-
   let mut stream = TcpStream::connect("127.0.0.1:6379")?;
-
-  stream.write(&command.as_bytes())?;
-
   let mut response: [u8; 128] = [0; 128];
 
+  let command = redis!("SET", "foo", "bar");
+  stream.write(&command.as_bytes())?;
   let size = stream.read(&mut response)?;
-
   let v = Vec::from(&response[0..size]);
+  println!("response: {}", String::from_utf8(v).unwrap());
 
+  let command = redis!("GET", "foo");
+  stream.write(&command.as_bytes())?;
+  let size = stream.read(&mut response)?;
+  let v = Vec::from(&response[0..size]);
   println!("response: {}", String::from_utf8(v).unwrap());
 
   Ok(())
