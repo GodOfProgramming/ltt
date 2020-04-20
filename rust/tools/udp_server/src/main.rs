@@ -8,7 +8,12 @@ fn main() -> std::io::Result<()> {
   while let Ok((amt, src)) = socket.recv_from(&mut buf) {
     let buf = &mut buf[..amt];
     let data = str::from_utf8(&buf).unwrap();
-    println!("data: {}", data);
+    println!("request: {}", data);
+    let mut v = Vec::from(buf);
+    v.reverse();
+    v.push(49);
+    v.reverse();
+    socket.send_to(&v, src)?;
   }
 
   Ok(())
