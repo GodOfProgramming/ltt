@@ -28,6 +28,8 @@ fn handle_connection(mut stream: TcpStream) {
 
     stream.read(&mut buffer).unwrap();
 
+    println!("---------------\n{}\n---------------", String::from_utf8(Vec::from(&buffer[..])).unwrap());
+
     let resp = if buffer.starts_with(get("/").as_bytes()) {
         let html = fs::read_to_string("public/index.html").unwrap();
         response(200, "OK", &html)
