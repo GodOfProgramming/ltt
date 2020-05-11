@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'net/smtp'
 
 message = <<MESSAGE_END

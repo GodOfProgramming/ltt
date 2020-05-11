@@ -1,4 +1,4 @@
-#!/bin/ruby
+#!/usr/bin/env ruby
 
 class Fixnum
   N_BYTES = [42].pack('i').size

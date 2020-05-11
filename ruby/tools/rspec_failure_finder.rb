@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 require 'set'
 
 if ARGV.size != 2

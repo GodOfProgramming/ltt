@@ -1,4 +1,4 @@
-#!/bin/ruby
+#!/usr/bin/env ruby
 
 if ARGV.length == 0
   puts "Usage: snake-to-pascal.rb [files...]"

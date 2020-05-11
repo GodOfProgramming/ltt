@@ -1,4 +1,4 @@
-#!/bin/ruby
+#!/usr/bin/env ruby
 
 cxx = ARGV[0]
 args = ARGV.slice(1..-1)

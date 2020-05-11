@@ -1,4 +1,4 @@
-#!/bin/ruby
+#!/usr/bin/env ruby
 
 str = nil
 File.open("#{__dir__}/dir.rb") do |file|

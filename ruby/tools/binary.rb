@@ -1,4 +1,4 @@
-#!/bin/ruby
+#!/usr/bin/env ruby
 
 count = 0
 ARGV.each_with_index do |val, indx|
