@@ -59,6 +59,24 @@ Eval(JSON)
 
           array.push("1", 2, "3", "value", arrayVal);
 
+          // scoped value
+          {
+            ftypes::JSON scopedVal, scopedArrVal;
+
+            scopedVal.set(1, "some_value");
+            doc.set(scopedVal, "scoped_value");
+
+            scopedArrVal.setArray();
+            scopedArrVal.push(3, 2, 1);
+            array.push(scopedArrVal, "another string just for fun");
+          }
+
+          // make sure no array forming issues exist
+          {
+            auto out = array.toString();
+            Expect(out).toEqual(R"(["1",2,"3","value",{"value":1},[3,2,1],"another string just for fun"])");
+          }
+
           doc.set("1", "root1");
           doc.set(2, "root2", "child");
 
@@ -70,7 +88,7 @@ Eval(JSON)
 
           auto out = doc.toString();
           Expect(out).toEqual(
-           R"({"root1":"1","root2":{"child":2},"other":{"a_value":1,"b_value":{"c_value":2}},"array":["1",2,"3","value",{"value":1}]})");
+           R"({"scoped_value":{"some_value":1},"root1":"1","root2":{"child":2},"other":{"a_value":1,"b_value":{"c_value":2}},"array":["1",2,"3","value",{"value":1},[3,2,1],"another string just for fun"]})");
 
           const char* root1 = doc.get<const char*>("root1");
           int root2_child = doc.get<int>("root2", "child");
