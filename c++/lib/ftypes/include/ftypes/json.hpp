@@ -73,7 +73,7 @@ namespace ftypes
 
     /* Iterates over each element if the document is an array and returns true, simply returns false if not an array */
     template <typename Callback>  // template so lambdas are used directly and inlined rather than wrapped in a std::function
-    bool foreach (Callback function);
+    bool foreach(Callback function);
 
     /* Returns true if the specified member's underlying type is correct, false otherwise, even if the member does not exist */
     template <typename... Args>
@@ -231,7 +231,7 @@ namespace ftypes
   }
 
   template <typename Callback>
-  inline bool JSON::foreach (Callback function)
+  inline bool JSON::foreach(Callback function)
   {
     if (mDoc.IsArray()) {
       for (auto i = mDoc.Begin(); i != mDoc.End(); i++) {
@@ -413,6 +413,17 @@ namespace ftypes
     member->SetUint64(value);
   }
 
+  template <>
+  inline void JSON::setValue(rapidjson::Value* member, double& value)
+  {
+    member->SetDouble(value);
+  }
+
+  template <>
+  inline void JSON::setValue(rapidjson::Value* member, const double& value)
+  {
+    member->SetDouble(value);
+  }
 
   template <size_t Size>
   inline void JSON::setValue(rapidjson::Value* member, char const (&value)[Size])

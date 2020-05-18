@@ -6,16 +6,13 @@ using namespace std::chrono_literals;
 
 int main()
 {
-    epoch::Clock clock;
+  epoch::Clock clock;
 
-    clock.reset();
+  std::this_thread::sleep_for(500ms);
 
-    std::this_thread::sleep_for(1s);
+  auto t = clock.elapsed<epoch::Second>();
 
-    if (clock.elapsed<epoch::Second>(1)) {
-        std::cout << "1 second passed" << '\n';
-    } 
+  std::cout << "Time passed: " << t << '\n';
 
-    return 0;
+  return 0;
 }
-
