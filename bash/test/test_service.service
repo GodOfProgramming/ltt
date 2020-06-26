@@ -4,7 +4,6 @@ Description=Example systemd service.
 [Service]
 Type=simple
 ExecStart=/tmp/sleeper
-EnvironmentFile=/tmp/sleeper.env
 
 [Install]
 WantedBy=multi-user.target

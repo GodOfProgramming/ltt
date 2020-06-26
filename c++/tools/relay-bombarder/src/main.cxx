@@ -192,9 +192,9 @@ int main(int argc, const char* argv[])
 
   std::vector<uint8_t> route_token;
   {
-    auto route_request_bin_filename = getenv("NEW_TOKEN_BIN");
+    auto route_request_bin_filename = getenv("ROUTE_TOKEN_BIN");
     if (route_request_bin_filename == nullptr) {
-      std::cout << "NEW_TOKEN_BIN is empty\n";
+      std::cout << "ROUTE_TOKEN_BIN is empty\n";
     }
 
     std::ifstream ifstr(route_request_bin_filename, std::ios::binary);
@@ -260,8 +260,8 @@ int main(int argc, const char* argv[])
     auto state = &continue_states[t];
     state->target_addr = &target_addr;
     state->packets_in_buf = packets_in_buf;
-    state->payload = cont_token.data();
-    state->payload_sz = cont_token.size();
+    state->payload = route_token.data();
+    state->payload_sz = route_token.size();
     threads[t] = std::make_unique<std::thread>([&quit, state] {
       thread_loop(quit, state);
     });
