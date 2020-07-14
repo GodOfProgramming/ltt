@@ -3,8 +3,8 @@ require 'optparse'
 require 'ostruct'
 require 'fileutils'
 require 'erb'
-require_relative 'makemake-files/makefile_vars.rb'
-require_relative 'makemake-files/makefile_targets.rb'
+require_relative 'makemake-files/makefile_vars'
+require_relative 'makemake-files/makefile_targets'
 
 ######################
 ### Option Parsing ###

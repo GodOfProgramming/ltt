@@ -1,13 +1,10 @@
-#include <linux/bpf.h>
+#include "xdp.h"
 
-#define SEC(NAME) __attribute__((section(NAME), used))
+char __license[] SEC("license") = "GPL";
 
 SEC("prog")
-int xdp_drop(struct xdp_md *ctx) 
+int xdp_drop(struct xdp_md *ctx)
 {
 	(void)ctx;
 	return XDP_DROP;
 }
-
-char __license[] SEC("license") = "GPL";
-
