@@ -6,20 +6,23 @@
 #include <errno.h>
 #include <signal.h>
 #include <unistd.h>
+#include <net/if.h>
 
 volatile int g_exit;
 
-void handle_sigkill(int sig) {
+void handle_sigkill(int sig)
+{
   (void)sig;
   g_exit = 1;
 }
 
-void xdp_link_attach(int prog_fd) {
+void xdp_link_attach(int ifindex, int prog_fd)
+{
   int err;
 
-  err = bpf_set_link_xdp_fd(0, prog_fd, 0);
+  err = bpf_set_link_xdp_fd(ifindex, prog_fd, 0);
   if (err < 0) {
-    error(1, errno, "link set xdp failed: %s");
+    error(1, errno, "link set xdp failed");
   }
 }
 
@@ -43,11 +46,11 @@ struct bpf_object* __load_bpf_object_file(const char* filename)
   return obj;
 }
 
-struct bpf_object* __load_bpf_and_xdp_attach(const char* filename, const char* section) {
+void __load_bpf_and_xdp_attach(int ifindex, const char* filename, const char* section)
+{
   struct bpf_program* bpf_prog;
-  struct bpf_object* bpf_obj;
-  int prog_fd = -1;
-  int err;
+  struct bpf_object*  bpf_obj;
+  int                 prog_fd = -1;
 
   signal(SIGKILL, handle_sigkill);
 
@@ -65,11 +68,38 @@ struct bpf_object* __load_bpf_and_xdp_attach(const char* filename, const char* s
     error(1, errno, "err bpf_program__fd failed\n");
   }
 
-  xdp_link_attach(prog_fd);
-
-  return bpf_obj;
+  xdp_link_attach(ifindex, prog_fd);
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+  const char* dev;
+  const char* file;
+  const char* sec;
 
+  const char** args[] = {
+   &dev,
+   &file,
+   &sec,
+  };
+
+  int i;
+  for (i = 0; i < sizeof(args) / sizeof(args[0]) && i < argc + 1; i++) {
+    *args[i] = argv[i + 1];
+  }
+
+  int ifindex = if_nametoindex(dev);
+
+  if (!ifindex) {
+    error(1, errno, "unknown interface '%s'", dev);
+  }
+
+  __load_bpf_and_xdp_attach(ifindex, file, sec);
+
+  getchar();
+
+  int err = bpf_set_link_xdp_fd(ifindex, -1, 0);
+  if (err < 0) {
+    error(1, errno, "link set xdp failed (remove)");
+  }
 }
