@@ -114,97 +114,94 @@ int filter(struct xdp_md* ctx)
 // payload
 int packet_info__fill(struct xdp_md* ctx, struct packet_info* info)
 {
-  info->packet_end   = (void*)(long)ctx->data_end;
+  info->packet_end = (void*)(long)ctx->data_end;
 
   // ethernet header
-  //info->eth_frame = (void*)(long)ctx->data;
-  //void* eth_frame_end = (void*)info->eth_frame + sizeof(*info->eth_frame);
-  //if (eth_frame_end > info->packet_end) {
-  //  bpf_printk("bad packet, eth frame length check\n");
-  //  return 0;
-  //}
+  info->eth_frame     = (void*)(long)ctx->data;
+  void* eth_frame_end = (void*)info->eth_frame + sizeof(*info->eth_frame);
+  if (eth_frame_end > info->packet_end) {
+    bpf_printk("bad packet, eth frame length check\n");
+    return 0;
+  }
 
-  //switch (__be16_to_cpu(info->eth_frame->h_proto)) {
-  //  case ETH_P_IP:
-  //    info->ip_type = IP_TYPE_IPV4;
+  switch (__be16_to_cpu(info->eth_frame->h_proto)) {
+    case ETH_P_IP:
+      info->ip_type = IP_TYPE_IPV4;
 
-  //    // ip header
-  //    info->ip_header.ipv4 = eth_frame_end;
-  //    void* ip_header_end  = (void*)info->ip_header.ipv4 + sizeof(*info->ip_header.ipv4);
-  //    if (ip_header_end > info->packet_end) {
-  //      bpf_printk("bad packet, ip header length check\n");
-  //      return 0;
-  //    }
+      // ip header
+      info->ip_header.ipv4 = eth_frame_end;
+      void* ip_header_end  = (void*)info->ip_header.ipv4 + sizeof(*info->ip_header.ipv4);
+      if (ip_header_end > info->packet_end) {
+        bpf_printk("bad packet, ip header length check\n");
+        return 0;
+      }
 
-  //    void* proto_header_end = NULL;
-  //    switch (info->ip_header.ipv4->protocol) {
-  //      case IPPROTO_UDP:
-  //        //info->proto_type = PROTO_TYPE_UDP;
+      switch (info->ip_header.ipv4->protocol) {
+        case IPPROTO_UDP: {
+          info->proto_type = PROTO_TYPE_UDP;
 
-  //        //// protocol header
-  //        //info->proto_header.udp = ip_header_end;
-  //        //proto_header_end       = (void*)info->proto_header.udp + sizeof(*info->proto_header.udp);
-  //        //info->dest.port        = info->proto_header.udp->dest;
+          // protocol header
+          info->proto_header.udp = ip_header_end;
+          void* proto_header_end = (void*)info->proto_header.udp + sizeof(*info->proto_header.udp);
 
-  //        //if (proto_header_end > info->packet_end) {
-  //        //  bpf_printk("bad packet, proto length check\n");
-  //        //  return 0;
-  //        //}
+          if (proto_header_end > info->packet_end) {
+            bpf_printk("bad packet, proto length check\n");
+            return 0;
+          }
 
-  //        //// payload
-  //        //info->payload_begin = proto_header_end;
+          info->dest.port        = info->proto_header.udp->dest;
 
-  //        break;
-  //      case IPPROTO_TCP:
-  //        //info->proto_type = PROTO_TYPE_TCP;
+          // payload
+          info->payload_begin = proto_header_end;
+        } break;
+        case IPPROTO_TCP: {
+          info->proto_type = PROTO_TYPE_TCP;
 
-  //        //// protocol header
-  //        //info->proto_header.tcp = ip_header_end;
-  //        //proto_header_end       = (void*)info->proto_header.tcp + sizeof(*info->proto_header.tcp);
+          // protocol header
+          info->proto_header.tcp = ip_header_end;
+          void* proto_header_end = (void*)info->proto_header.tcp + sizeof(*info->proto_header.tcp);
 
-  //        //if (proto_header_end > info->packet_end) {
-  //        //  bpf_printk("bad packet, proto length check\n");
-  //        //  return 0;
-  //        //}
+          if (proto_header_end > info->packet_end) {
+            bpf_printk("bad packet, proto length check\n");
+            return 0;
+          }
 
-  //        //// payload
-  //        //info->payload_begin = proto_header_end;
+          // payload
+          info->payload_begin = proto_header_end;
+        } break;
+        case IPPROTO_ICMP: {
+          info->proto_type = PROTO_TYPE_ICMP;
 
-  //        break;
-  //      case IPPROTO_ICMP:
-  //        //info->proto_type = PROTO_TYPE_ICMP;
+          // protocol header
+          info->proto_header.icmp = ip_header_end;
+          void* proto_header_end        = (void*)info->proto_header.icmp + sizeof(*info->proto_header.icmp);
 
-  //        //// protocol header
-  //        //info->proto_header.icmp = ip_header_end;
-  //        //proto_header_end        = (void*)info->proto_header.icmp + sizeof(*info->proto_header.icmp);
+          if (proto_header_end > info->packet_end) {
+            bpf_printk("bad packet, proto length check\n");
+            return 0;
+          }
 
-  //        //if (proto_header_end > info->packet_end) {
-  //        //  bpf_printk("bad packet, proto length check\n");
-  //        //  return 0;
-  //        //}
-
-  //        //// payload
-  //        //info->payload_begin = proto_header_end;
-
-  //        break;
-  //      default:
-  //        info->proto_type = PROTO_TYPE_UNKNOWN;
-  //        bpf_printk("bad packet, unknown proto\n");
-  //        return 0;
-  //        break;
-  //    }
-  //    break;
-  //  case ETH_P_IPV6:
-  //    info->ip_type = IP_TYPE_IPV6;
-  //    bpf_printk("good packet, but ipv6\n");
-  //    return 0;
-  //    break;
-  //  default:
-  //    info->ip_type    = IP_TYPE_UNKNOWN;
-  //    info->proto_type = PROTO_TYPE_UNKNOWN;
-  //    bpf_printk("bad packet, unknown ip type\n");
-  //    break;
-  //}
+          // payload
+          info->payload_begin = proto_header_end;
+        } break;
+        default:
+          info->proto_type = PROTO_TYPE_UNKNOWN;
+          bpf_printk("bad packet, unknown proto\n");
+          return 0;
+          break;
+      }
+      break;
+    case ETH_P_IPV6:
+      info->ip_type = IP_TYPE_IPV6;
+      bpf_printk("good packet, but ipv6\n");
+      return 0;
+      break;
+    default:
+      info->ip_type    = IP_TYPE_UNKNOWN;
+      info->proto_type = PROTO_TYPE_UNKNOWN;
+      bpf_printk("bad packet, unknown ip type\n");
+      break;
+  }
 
   return 1;
 }
