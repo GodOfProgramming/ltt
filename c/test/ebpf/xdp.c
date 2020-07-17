@@ -23,6 +23,8 @@ char __license[] SEC("license") = "GPL";
 
 #define XDP_LABEL(name) xdp_label_##name
 
+#define print(str, ...) bpf_printk("xdp: " str "\n", ##__VA_ARGS__)
+
 #define MAX(a, b)           \
   ({                        \
     __typeof__(a) _a = (a); \
@@ -54,7 +56,6 @@ enum proto_type
 
 struct packet_info
 {
-  void* packet_begin;
   void* packet_end;
 
   struct ethhdr* eth_frame;
@@ -64,7 +65,7 @@ struct packet_info
   {
     struct iphdr*   ipv4;
     struct ipv6hdr* ipv6;
-  } ip_header;
+  } iphdr;
 
   enum proto_type proto_type;
   union
@@ -72,7 +73,7 @@ struct packet_info
     struct tcphdr*  tcp;
     struct udphdr*  udp;
     struct icmphdr* icmp;
-  } proto_header;
+  } transporthdr;
 
   struct
   {
@@ -105,102 +106,135 @@ int filter(struct xdp_md* ctx)
   if (!packet_info__fill(ctx, &info)) {
     return XDP_ABORTED;
   }
+
+  if (info.ip_type == IP_TYPE_IPV4 && info.proto_type == PROTO_TYPE_UDP) {
+    unsigned char buff[100] = {0};
+
+    int i;
+#pragma unroll
+    for (i = 0; i < sizeof(buff) - 1; i++) {
+      // if ((void*)(info.payload_begin + i) < info.packet_end) {
+      //  buff[i] = info.payload_begin[i];
+      //} else {
+      //  break;
+      //}
+    }
+
+    print("\npayload: %p\npacket begin: %p\npacket end: %p", info.payload_begin, info.eth_frame, info.packet_end);
+    print("udp packet data: %s", buff);
+  }
+
   return XDP_PASS;
 }
 
-// eth header
-// ip header
-// proto header
-// payload
 int packet_info__fill(struct xdp_md* ctx, struct packet_info* info)
 {
   info->packet_end = (void*)(long)ctx->data_end;
 
-  // ethernet header
+  // ethernet header, wireless stuff is in <nl80211.h>
+
+  uint16_t iptype;
+
   info->eth_frame     = (void*)(long)ctx->data;
   void* eth_frame_end = (void*)info->eth_frame + sizeof(*info->eth_frame);
   if (eth_frame_end > info->packet_end) {
-    bpf_printk("bad packet, eth frame length check\n");
+    print("bad packet, eth frame length check");
     return 0;
   }
 
-  switch (__be16_to_cpu(info->eth_frame->h_proto)) {
-    case ETH_P_IP:
+  iptype = __constant_ntohs(info->eth_frame->h_proto);
+
+  // ip protocol
+
+  uint8_t transport_protocol;
+
+  void* ip_header_end = NULL;
+
+  switch (iptype) {
+    case ETH_P_IP: {
       info->ip_type = IP_TYPE_IPV4;
 
       // ip header
-      info->ip_header.ipv4 = eth_frame_end;
-      void* ip_header_end  = (void*)info->ip_header.ipv4 + sizeof(*info->ip_header.ipv4);
+      info->iphdr.ipv4 = eth_frame_end;
+      ip_header_end    = (void*)info->iphdr.ipv4 + sizeof(*info->iphdr.ipv4);
       if (ip_header_end > info->packet_end) {
-        bpf_printk("bad packet, ip header length check\n");
+        print("bad packet, ip header length check");
         return 0;
       }
 
-      switch (info->ip_header.ipv4->protocol) {
-        case IPPROTO_UDP: {
-          info->proto_type = PROTO_TYPE_UDP;
-
-          // protocol header
-          info->proto_header.udp = ip_header_end;
-          void* proto_header_end = (void*)info->proto_header.udp + sizeof(*info->proto_header.udp);
-
-          if (proto_header_end > info->packet_end) {
-            bpf_printk("bad packet, proto length check\n");
-            return 0;
-          }
-
-          info->dest.port        = info->proto_header.udp->dest;
-
-          // payload
-          info->payload_begin = proto_header_end;
-        } break;
-        case IPPROTO_TCP: {
-          info->proto_type = PROTO_TYPE_TCP;
-
-          // protocol header
-          info->proto_header.tcp = ip_header_end;
-          void* proto_header_end = (void*)info->proto_header.tcp + sizeof(*info->proto_header.tcp);
-
-          if (proto_header_end > info->packet_end) {
-            bpf_printk("bad packet, proto length check\n");
-            return 0;
-          }
-
-          // payload
-          info->payload_begin = proto_header_end;
-        } break;
-        case IPPROTO_ICMP: {
-          info->proto_type = PROTO_TYPE_ICMP;
-
-          // protocol header
-          info->proto_header.icmp = ip_header_end;
-          void* proto_header_end        = (void*)info->proto_header.icmp + sizeof(*info->proto_header.icmp);
-
-          if (proto_header_end > info->packet_end) {
-            bpf_printk("bad packet, proto length check\n");
-            return 0;
-          }
-
-          // payload
-          info->payload_begin = proto_header_end;
-        } break;
-        default:
-          info->proto_type = PROTO_TYPE_UNKNOWN;
-          bpf_printk("bad packet, unknown proto\n");
-          return 0;
-          break;
-      }
-      break;
-    case ETH_P_IPV6:
+      transport_protocol = info->iphdr.ipv4->protocol;
+    } break;
+    case ETH_P_IPV6: {
       info->ip_type = IP_TYPE_IPV6;
-      bpf_printk("good packet, but ipv6\n");
-      return 0;
-      break;
-    default:
+
+      info->iphdr.ipv6 = eth_frame_end;
+      ip_header_end    = (void*)info->iphdr.ipv6 + sizeof(*info->iphdr.ipv6);
+      if (ip_header_end > info->packet_end) {
+        print("bad packet, ip header length check");
+        return 0;
+      }
+
+      transport_protocol = info->iphdr.ipv6->nexthdr;
+    } break;
+    default: {
       info->ip_type    = IP_TYPE_UNKNOWN;
       info->proto_type = PROTO_TYPE_UNKNOWN;
-      bpf_printk("bad packet, unknown ip type\n");
-      break;
+      return 1;
+    }
+  }
+
+  // transport protocol
+
+  void* transporthdr_end = NULL;
+
+  switch (transport_protocol) {
+    case IPPROTO_UDP: {
+      info->proto_type = PROTO_TYPE_UDP;
+
+      // protocol header
+      info->transporthdr.udp = ip_header_end;
+      transporthdr_end       = (void*)info->transporthdr.udp + sizeof(*info->transporthdr.udp);
+      if (transporthdr_end > info->packet_end) {
+        print("bad packet, proto length check");
+        return 0;
+      }
+
+      info->dest.port = info->transporthdr.udp->dest;
+    } break;
+    case IPPROTO_TCP: {
+      info->proto_type = PROTO_TYPE_TCP;
+
+      // protocol header
+      info->transporthdr.tcp = ip_header_end;
+      transporthdr_end       = (void*)info->transporthdr.tcp + sizeof(*info->transporthdr.tcp);
+      if (transporthdr_end > info->packet_end) {
+        print("bad packet, proto length check");
+        return 0;
+      }
+    } break;
+    case IPPROTO_ICMP: {
+      info->proto_type = PROTO_TYPE_ICMP;
+
+      // protocol header
+      info->transporthdr.icmp = ip_header_end;
+      transporthdr_end        = (void*)info->transporthdr.icmp + sizeof(*info->transporthdr.icmp);
+      if (transporthdr_end > info->packet_end) {
+        print("bad packet, proto length check");
+        return 0;
+      }
+    } break;
+    default: {
+      info->proto_type = PROTO_TYPE_UNKNOWN;
+      return 1;
+    }
+  }
+
+  // payload
+  info->payload_begin = transporthdr_end;
+
+  if ((void*)info->payload_begin > info->packet_end) {
+    print("bad packet, payload length check");
+    return 0;
   }
 
   return 1;
