@@ -80,7 +80,7 @@ struct packet_info
     uint16_t port;
   } dest;
 
-  uint8_t* payload_begin;
+  uint8_t* payload;
 };
 
 int packet_info__fill(struct xdp_md* ctx, struct packet_info* info);
@@ -107,24 +107,11 @@ int filter(struct xdp_md* ctx)
     return XDP_ABORTED;
   }
 
-  if (info.ip_type == IP_TYPE_IPV4 && info.proto_type == PROTO_TYPE_UDP) {
-    unsigned char buff[100] = {0};
-
-    int i;
-#pragma unroll
-    for (i = 0; i < sizeof(buff) - 1; i++) {
-      // if ((void*)(info.payload_begin + i) < info.packet_end) {
-      //  buff[i] = info.payload_begin[i];
-      //} else {
-      //  break;
-      //}
-    }
-
-    print("\npayload: %p\npacket begin: %p\npacket end: %p", info.payload_begin, info.eth_frame, info.packet_end);
-    print("udp packet data: %s", buff);
+  if (info.ip_type == IP_TYPE_IPV4 && info.proto_type == PROTO_TYPE_UDP && info.dest.port == 40000) {
+    return XDP_PASS;
+  } else {
+    return XDP_DROP;
   }
-
-  return XDP_PASS;
 }
 
 int packet_info__fill(struct xdp_md* ctx, struct packet_info* info)
@@ -144,7 +131,7 @@ int packet_info__fill(struct xdp_md* ctx, struct packet_info* info)
 
   iptype = __constant_ntohs(info->eth_frame->h_proto);
 
-  // ip protocol
+  // ip type
 
   uint8_t transport_protocol;
 
@@ -155,25 +142,26 @@ int packet_info__fill(struct xdp_md* ctx, struct packet_info* info)
       info->ip_type = IP_TYPE_IPV4;
 
       // ip header
-      info->iphdr.ipv4 = eth_frame_end;
-      ip_header_end    = (void*)info->iphdr.ipv4 + sizeof(*info->iphdr.ipv4);
+      ip_header_end = eth_frame_end + sizeof(*info->iphdr.ipv4);
       if (ip_header_end > info->packet_end) {
         print("bad packet, ip header length check");
         return 0;
       }
 
+      info->iphdr.ipv4   = eth_frame_end;
       transport_protocol = info->iphdr.ipv4->protocol;
     } break;
     case ETH_P_IPV6: {
       info->ip_type = IP_TYPE_IPV6;
 
-      info->iphdr.ipv6 = eth_frame_end;
-      ip_header_end    = (void*)info->iphdr.ipv6 + sizeof(*info->iphdr.ipv6);
+      // ip header
+      ip_header_end = eth_frame_end + sizeof(*info->iphdr.ipv6);
       if (ip_header_end > info->packet_end) {
         print("bad packet, ip header length check");
         return 0;
       }
 
+      info->iphdr.ipv6   = eth_frame_end;
       transport_protocol = info->iphdr.ipv6->nexthdr;
     } break;
     default: {
@@ -192,36 +180,38 @@ int packet_info__fill(struct xdp_md* ctx, struct packet_info* info)
       info->proto_type = PROTO_TYPE_UDP;
 
       // protocol header
-      info->transporthdr.udp = ip_header_end;
-      transporthdr_end       = (void*)info->transporthdr.udp + sizeof(*info->transporthdr.udp);
+      transporthdr_end = ip_header_end + sizeof(*info->transporthdr.udp);
       if (transporthdr_end > info->packet_end) {
         print("bad packet, proto length check");
         return 0;
       }
 
-      info->dest.port = info->transporthdr.udp->dest;
+      info->transporthdr.udp = ip_header_end;
+      info->dest.port        = info->transporthdr.udp->dest;
     } break;
     case IPPROTO_TCP: {
       info->proto_type = PROTO_TYPE_TCP;
 
       // protocol header
-      info->transporthdr.tcp = ip_header_end;
-      transporthdr_end       = (void*)info->transporthdr.tcp + sizeof(*info->transporthdr.tcp);
+      transporthdr_end = ip_header_end + sizeof(*info->transporthdr.tcp);
       if (transporthdr_end > info->packet_end) {
         print("bad packet, proto length check");
         return 0;
       }
+
+      info->transporthdr.tcp = ip_header_end;
     } break;
     case IPPROTO_ICMP: {
       info->proto_type = PROTO_TYPE_ICMP;
 
       // protocol header
-      info->transporthdr.icmp = ip_header_end;
-      transporthdr_end        = (void*)info->transporthdr.icmp + sizeof(*info->transporthdr.icmp);
+      transporthdr_end = ip_header_end + sizeof(*info->transporthdr.icmp);
       if (transporthdr_end > info->packet_end) {
         print("bad packet, proto length check");
         return 0;
       }
+
+      info->transporthdr.icmp = ip_header_end;
     } break;
     default: {
       info->proto_type = PROTO_TYPE_UNKNOWN;
@@ -230,9 +220,10 @@ int packet_info__fill(struct xdp_md* ctx, struct packet_info* info)
   }
 
   // payload
-  info->payload_begin = transporthdr_end;
 
-  if ((void*)info->payload_begin > info->packet_end) {
+  info->payload = transporthdr_end;
+
+  if ((void*)info->payload > info->packet_end) {
     print("bad packet, payload length check");
     return 0;
   }
