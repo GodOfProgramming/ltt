@@ -20,6 +20,7 @@ class CPP
 
     @includes = Array.new
     @flags = Array.new
+    @shared_libs = Array.new
 
     # create the repo init task
     task :init do
@@ -32,13 +33,15 @@ class CPP
 
     desc "Build the binary executable"
     file exe => object_files do |task|
-      puts "#{cxx} #{flags.join(' ')} #{object_files.join(' ')} -o #{task.name}"
+      FileUtils.mkdir_p(File.dirname(task.name))
+      sh "#{cxx} #{flags.join(' ')} #{object_files.join(' ')} -o #{task.name} #{generate_shared_libs}"
     end
   end
 
   def enable_obj_rule
     rule('.o' => [proc { |tn| tn.sub(/\.o$/, '.cpp').sub(/^obj\//, 'src/') }]) do |task|
-      puts "#{cxx} #{flags.join(' ')} #{includes.join(' ')} -c #{task.source} -o #{task.name}"
+      FileUtils.mkdir_p(File.dirname(task.name))
+      sh "#{cxx} #{flags.join(' ')} #{generate_includes} -c #{task.source} -o #{task.name}"
     end
   end
 
@@ -67,5 +70,15 @@ class CPP
 
   def add_default_flags
     add_flag('-Wall', '-Wextra', '-std=c++17', '-O3', '-march=native', '-frename-registers', '-funroll-loops')
+  end
+
+  private
+
+  def generate_includes
+    includes.map { |i| "-I#{i}" }.join(' ')
+  end
+
+  def generate_shared_libs
+    shared_libs.map { |l| "-l#{l}" }.join(' ')
   end
 end
