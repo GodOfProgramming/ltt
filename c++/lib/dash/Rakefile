@@ -1,0 +1,4 @@
+require 'rake_helpers'
+
+cpp = CPP.new
+cpp.defaults!

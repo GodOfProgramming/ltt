@@ -4,6 +4,8 @@
 #include <sstream>
 #include <FreeImage.h>
 
+#include "utility/error.hpp"
+
 #include "pixel.hpp"
 
 namespace art
@@ -22,9 +24,6 @@ namespace art
    public:
     Image() = default;
 
-    /* Load a image using filename */
-    Image(std::string filename);
-
     /* Create a blank image with width and length in pixels */
     Image(Pixel* data, size_t width, size_t rows);
 
@@ -38,41 +37,42 @@ namespace art
     void copy(const Image& other);
 
     /* Loads the file using the supplied file name from the constructor */
-    bool load();
+    auto load() -> bool;
 
     /* Sets the filename to the supplied one and loads */
-    bool load(std::string filename);
+    auto load(std::string filename) -> bool;
 
-    unsigned char* getData();
+    auto data() -> unsigned char*;
 
     /* Number of colums, in pixels */
-    unsigned int lengthInPixels();
+    auto img_pixel_length() -> unsigned int;
     /* Number of columns, in bytes */
-    unsigned int lengthInBytes();
-    /* Number of rows */
-    unsigned int rows();
+    auto img_byte_length() -> unsigned int;
 
     /* length in pixels */
-    unsigned long lengthOfDataInPixels();
+    auto data_pixel_length() -> unsigned long;
     /* length in bytes */
-    unsigned long lengthOfDataInBytes();
+    auto data_byte_length() -> unsigned long;
+
+    /* Number of rows */
+    auto rows() -> unsigned int;
 
     void fill(unsigned char color);
     void fill(unsigned char r, unsigned char g, unsigned char b);
 
     // Write to this image using data, at offset x & y in bytes
-    void writeBytes(Image& data, size_t x, size_t y);
+    void write_bytes(Image& data, size_t x, size_t y);
 
     // Write to this image using data, at offset x & y in pixels
-    void writePixels(Image& data, size_t x, size_t y);
+    void write_pixels(Image& data, size_t x, size_t y);
 
     // Blend this image using data, at offset x & y in pixels
     void blend(Image& data, size_t x, size_t y);
 
-    bool save();
-    bool save(std::string filename);
-    bool save(ImageFormat format);
-    bool save(std::string filename, ImageFormat format);
+    auto save() -> bool;
+    auto save(std::string filename) -> bool;
+    auto save(ImageFormat format) -> bool;
+    auto save(std::string filename, ImageFormat format) -> bool;
 
     std::string err();
 
@@ -84,63 +84,61 @@ namespace art
     unsigned int mRows;
     std::string mErr;
 
-    bool loadFromFile();
+    auto load_from_file() -> bool;
   };
-
-  inline Image::Image(std::string filename): mFilename(filename) {}
 
   inline Image::Image(size_t width, size_t rows)
   {
-    this->mRows = rows;
-    this->mByteWidth = width * 4;
+    mRows = rows;
+    mByteWidth = width * 4;
 
     mData.resize(rows * width * 4);
   }
 
   inline Image::Image(Pixel* data, size_t width, size_t rows)
   {
-    this->mRows = rows * 4;
-    this->mByteWidth = width * 4;
+    mRows = rows * 4;
+    mByteWidth = width * 4;
 
-    this->mData.resize(this->mRows * this->mByteWidth);
+    mData.resize(mRows * mByteWidth);
 
-    size_t offset = this->mRows * this->mByteWidth;
-    this->mData.insert(this->mData.begin(), (unsigned char*)data, (unsigned char*)data + offset);
+    size_t offset = mRows * mByteWidth;
+    mData.insert(mData.begin(), (unsigned char*)data, (unsigned char*)data + offset);
   }
 
   inline Image::Image(const unsigned char* data, size_t width, size_t rows)
   {
-    this->mRows = rows;
-    this->mByteWidth = width;
+    mRows = rows;
+    mByteWidth = width;
 
-    this->mData.resize(this->mRows * this->mByteWidth);
+    mData.resize(mRows * mByteWidth);
 
-    size_t offset = this->mRows * this->mByteWidth;
-    this->mData.insert(this->mData.begin(), data, data + offset);
+    size_t offset = mRows * mByteWidth;
+    mData.insert(mData.begin(), data, data + offset);
   }
 
   inline void Image::copy(const Image& other)
   {
-    this->mFilename = other.mFilename;
-    this->mFormat = other.mFormat;
-    this->mData.assign(other.mData.begin(), other.mData.end());
-    this->mByteWidth = other.mByteWidth;
-    this->mRows = other.mRows;
+    mFilename = other.mFilename;
+    mFormat = other.mFormat;
+    mData.assign(other.mData.begin(), other.mData.end());
+    mByteWidth = other.mByteWidth;
+    mRows = other.mRows;
     // don't copy the error msg if there is one
   }
 
-  inline bool Image::load()
+  inline auto Image::load() -> bool
   {
-    return loadFromFile();
+    return load_from_file();
   }
 
-  inline bool Image::load(std::string filename)
+  inline auto Image::load(std::string filename) -> bool
   {
     mFilename = filename;
     return load();
   }
 
-  inline bool Image::loadFromFile()
+  inline auto Image::load_from_file() -> bool
   {
     /* Raw Pointers
      * fImage
@@ -193,60 +191,59 @@ namespace art
     return true;
   }
 
-  inline unsigned char* Image::getData()
+  inline auto Image::data() -> unsigned char*
   {
     return mData.data();
   }
 
-  inline unsigned long Image::lengthOfDataInBytes()
+  inline auto Image::data_byte_length() -> unsigned long
   {
     return mData.size();
   }
 
-  inline unsigned long Image::lengthOfDataInPixels()
+  inline auto Image::data_pixel_length() -> unsigned long
   {
     return mData.size() / 4;
   }
 
-  inline unsigned int Image::lengthInBytes()
+  inline auto Image::img_byte_length() -> unsigned int
   {
     return mByteWidth;
   }
 
-  inline unsigned int Image::lengthInPixels()
+  inline auto Image::img_pixel_length() -> unsigned int
   {
     return mByteWidth / 4;
   }
 
-  inline unsigned int Image::rows()
+  inline auto Image::rows() -> unsigned int
   {
     return mRows;
   }
 
-  inline bool Image::save()
+  inline auto Image::save() -> bool
   {
     return save(mFilename, mFormat);
   }
 
-  inline bool Image::save(std::string filename)
+  inline auto Image::save(std::string filename) -> bool
   {
-    auto fname = filename.c_str();
-    return save(filename, (ImageFormat)FreeImage_GetFileType(fname));
+    return save(filename, (ImageFormat)FreeImage_GetFileType(filename.c_str()));
   }
 
-  inline bool Image::save(ImageFormat format)
+  inline auto Image::save(ImageFormat format) -> bool
   {
     return save(mFilename, format);
   }
 
-  inline bool Image::save(std::string filename, ImageFormat format)  // does not work
+  inline auto Image::save(std::string filename, ImageFormat format) -> bool  // does not work
   {
     if (format == ImageFormat::Unknown) {
       mErr = "unknown file type";
       return false;
     }
 
-    unsigned int pixelWidth = lengthInPixels();
+    unsigned int pixelWidth = img_pixel_length();
     FIBITMAP* bitmap = FreeImage_Allocate(pixelWidth, mRows, 32);
 
     if (!bitmap) {
@@ -298,11 +295,11 @@ namespace art
     }
   }
 
-  inline void Image::writeBytes(Image& other, size_t x, size_t y)
+  inline void Image::write_bytes(Image& other, size_t x, size_t y)
   {
-    auto thisWidth = this->lengthInBytes();
-    auto thisRows = this->rows();
-    auto otherWidth = other.lengthInBytes();
+    auto thisWidth = img_byte_length();
+    auto thisRows = rows();
+    auto otherWidth = other.img_byte_length();
     auto otherRows = other.rows();
 
     auto thisData = mData.data();
@@ -327,11 +324,11 @@ namespace art
     }
   }
 
-  void Image::writePixels(Image& other, size_t x, size_t y)
+  void Image::write_pixels(Image& other, size_t x, size_t y)
   {
-    auto thisWidth = this->lengthInPixels();
-    auto thisRows = this->rows();
-    auto otherWidth = other.lengthInPixels();
+    auto thisWidth = img_pixel_length();
+    auto thisRows = rows();
+    auto otherWidth = other.img_pixel_length();
     auto otherRows = other.rows();
 
     auto thisData = (Pixel*)mData.data();
@@ -358,9 +355,9 @@ namespace art
 
   inline void Image::blend(Image& other, size_t x, size_t y)
   {
-    auto thisWidth = this->lengthInPixels();
-    auto thisRows = this->rows();
-    auto otherWidth = other.lengthInPixels();
+    auto thisWidth = img_pixel_length();
+    auto thisRows = rows();
+    auto otherWidth = other.img_pixel_length();
     auto otherRows = other.rows();
 
     auto thisData = (Pixel*)mData.data();

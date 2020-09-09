@@ -1,0 +1,22 @@
+{
+  "files.associations": {
+    "*.makefile": "makefile",
+    "*.ipp": "cpp",
+    "*.tcc": "cpp",
+    "compare": "cpp",
+    "optional": "cpp",
+    "random": "cpp",
+    "limits": "cpp",
+    "memory": "cpp",
+    "new": "cpp",
+    "numeric": "cpp",
+    "ranges": "cpp",
+    "cmath": "cpp",
+    "tuple": "cpp",
+    "type_traits": "cpp",
+    "utility": "cpp",
+    "valarray": "cpp",
+    "variant": "cpp",
+    "complex": "cpp"
+  }
+}

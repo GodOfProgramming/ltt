@@ -26,6 +26,14 @@ class CPP
     task :init do
       FileUtils.mkdir_p('src')
     end
+
+    task :ycm do
+      FileUtils.cp("#{__dir__}/.ycm_extra_conf.py", Dir.pwd)
+    end
+
+    task :clang_format do
+      FileUtils.cp("#{__dir__}/.clang-format", Dir.pwd)
+    end
   end
 
   def enable_default_task
