@@ -1,0 +1,5 @@
+require 'rake_helpers'
+
+cpp = CPP.new
+cpp.defaults!
+cpp.add_lib('freeimage')

@@ -3,6 +3,7 @@
 !*.*
 !Makefile
 !makefile
+!Rakefile
 
 *.out
 *.o
