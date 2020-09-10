@@ -2,7 +2,6 @@
 
 namespace util
 {
-  using EmptyResult = std::tuple<>;
   template <typename OkType, typename ErrType>
   class Result
   {

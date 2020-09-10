@@ -1,14 +1,20 @@
 #!/usr/bin/env ruby
 require 'rake/clean'
+require 'rake/loaders/makefile'
 require 'sys_helpers'
 
-CLEAN.include('*.o')
-CLOBBER.include('*.exe')
+CLEAN.include('**/*.o', '**/*.mf')
+CLOBBER.include('**/*.exe')
 
 class CPP
   include Rake::DSL
 
-  attr_accessor :cxx, :exe, :exe_spec, :source_files, :object_files, :includes, :flags, :shared_libs
+  module MyLibs
+    Art = 'art'
+    Utility = 'utility'
+  end
+
+  attr_accessor :cxx, :exe, :exe_spec, :source_files, :object_files, :dependency_files, :includes, :flags, :shared_libs, :my_libs
 
   def initialize
     @cxx = 'g++'
@@ -17,10 +23,17 @@ class CPP
 
     @source_files = Rake::FileList["src/**/*.cpp"]
     @object_files = source_files.ext('.o').map { |file| file.sub(/^src\//, 'obj/') }
+    @dependency_files = source_files.ext('.mf').map { |file| file.sub(/^src\//, 'obj/') }
 
     @includes = Array.new
     @flags = Array.new
     @shared_libs = Array.new
+    
+    lib_dir = ENV['CPP_LIB']
+    @my_libs = {
+      MyLibs::Art => "#{lib_dir}/art/include",
+      MyLibs::Utility => "#{lib_dir}/utility/include",
+    }
 
     # create the repo init task
     task :init do
@@ -47,9 +60,27 @@ class CPP
   end
 
   def enable_obj_rule
-    rule('.o' => [proc { |tn| tn.sub(/\.o$/, '.cpp').sub(/^obj\//, 'src/') }]) do |task|
+    rule('.o' => source_files) do |task|
       FileUtils.mkdir_p(File.dirname(task.name))
       sh "#{cxx} #{flags.join(' ')} #{generate_includes} -c #{task.source} -o #{task.name}"
+    end
+  end
+
+  def enable_dependency_generation
+    rule('.mf' => source_files) do |task|
+      FileUtils.mkdir_p(File.dirname(task.name))
+      sh "#{cxx} #{generate_includes} -MM #{task.source} -MP -MF #{task.name}"
+    end
+
+    for dep in dependency_files do
+      file(dep => source_files)
+      import(dep)
+    end
+  end
+
+  def enable_my_libs(*new_my_libs)
+    for lib in new_my_libs do
+      includes.push(my_libs[lib])
     end
   end
 
@@ -68,6 +99,7 @@ class CPP
   def defaults!
     enable_default_task
     enable_obj_rule
+    enable_dependency_generation 
     add_default_flags
     add_default_includes
   end

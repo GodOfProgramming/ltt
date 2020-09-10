@@ -1,5 +1,8 @@
 #pragma once
+#include <any>
 #include <optional>
+#include <ostream>
+#include <iostream>
 
 namespace utility
 {
@@ -11,25 +14,35 @@ namespace utility
 
     Error(E t)
     {
-      this->value.emplace(t);
+      mValue.emplace(t);
     }
 
-    static auto none() -> Error<{}>
+    static auto none() -> Error
     {
-      return Error<{}>()
+      return Error();
     }
 
     auto operator*() -> E
     {
-      return *this->value;
+      return *mValue;
     }
 
-    auto is_err() -> bool
+    auto exists() -> bool
     {
-      return this->value.has_value;
+      return mValue.has_value();
     }
 
    private:
-    std::optional<E> value;
+    std::optional<E> mValue;
   };
+
+  template <typename E>
+  auto operator<<(std::ostream& stream, Error<E>& err) -> std::ostream&
+  {
+    if (err.exists()) {
+      return stream << *err;
+    } else {
+      return stream << "none";
+    }
+  }
 }  // namespace utility

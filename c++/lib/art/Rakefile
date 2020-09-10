@@ -3,3 +3,4 @@ require 'rake_helpers'
 cpp = CPP.new
 cpp.defaults!
 cpp.add_shared_lib('freeimage')
+cpp.enable_my_libs(CPP::MyLibs::Utility)

@@ -2,21 +2,26 @@
 #include <vector>
 #include <string>
 #include <sstream>
-#include <FreeImage.h>
+#include <tuple>
 
-#include "utility/error.hpp"
+#include <FreeImage.h>
 
 #include "pixel.hpp"
 
+#include <utility/error.hpp>
+
+using utility::Error;
+
 namespace art
 {
+  //const auto foo = 1;
   enum class ImageFormat
   {
     Unknown = FIF_UNKNOWN,
-    PNG = FIF_PNG,
-    JPEG = FIF_JPEG,
-    GIF = FIF_GIF,
-    BMP = FIF_BMP
+    PNG     = FIF_PNG,
+    JPEG    = FIF_JPEG,
+    GIF     = FIF_GIF,
+    BMP     = FIF_BMP
   };
 
   class Image
@@ -36,11 +41,8 @@ namespace art
     /* Copy the other image to this */
     void copy(const Image& other);
 
-    /* Loads the file using the supplied file name from the constructor */
-    auto load() -> bool;
-
-    /* Sets the filename to the supplied one and loads */
-    auto load(std::string filename) -> bool;
+    /* Sets the filename to the supplied one and loads. Error will be a string */
+    auto load(std::string filename) -> Error<std::string>;
 
     auto data() -> unsigned char*;
 
@@ -49,9 +51,9 @@ namespace art
     /* Number of columns, in bytes */
     auto img_byte_length() -> unsigned int;
 
-    /* length in pixels */
+    /* Length in pixels */
     auto data_pixel_length() -> unsigned long;
-    /* length in bytes */
+    /* Length in bytes */
     auto data_byte_length() -> unsigned long;
 
     /* Number of rows */
@@ -69,27 +71,38 @@ namespace art
     // Blend this image using data, at offset x & y in pixels
     void blend(Image& data, size_t x, size_t y);
 
-    auto save() -> bool;
-    auto save(std::string filename) -> bool;
-    auto save(ImageFormat format) -> bool;
-    auto save(std::string filename, ImageFormat format) -> bool;
+    /* Saves using the format of the file name. Error will be a string */
+    auto save(std::string filename) -> Error<std::string>;
 
-    std::string err();
+    /* Saves using the format specified regardless of the file name. Error will be a string */
+    auto save(std::string filename, ImageFormat format) -> Error<std::string>;
 
    private:
-    std::string mFilename;
-    ImageFormat mFormat;
+    ImageFormat          mFormat;
     std::vector<uint8_t> mData;
-    unsigned int mByteWidth;
-    unsigned int mRows;
-    std::string mErr;
+    unsigned int         mByteWidth;
+    unsigned int         mRows;
 
-    auto load_from_file() -> bool;
+    class ImageUnloader
+    {
+     public:
+      ImageUnloader(FIBITMAP*& bitmap): mBitmap(bitmap){};
+      ~ImageUnloader()
+      {
+        if (mBitmap != nullptr) {
+          FreeImage_Unload(mBitmap);
+          mBitmap = nullptr;
+        }
+      }
+
+     private:
+      FIBITMAP*& mBitmap;
+    };
   };
 
   inline Image::Image(size_t width, size_t rows)
   {
-    mRows = rows;
+    mRows      = rows;
     mByteWidth = width * 4;
 
     mData.resize(rows * width * 4);
@@ -97,7 +110,7 @@ namespace art
 
   inline Image::Image(Pixel* data, size_t width, size_t rows)
   {
-    mRows = rows * 4;
+    mRows      = rows * 4;
     mByteWidth = width * 4;
 
     mData.resize(mRows * mByteWidth);
@@ -108,7 +121,7 @@ namespace art
 
   inline Image::Image(const unsigned char* data, size_t width, size_t rows)
   {
-    mRows = rows;
+    mRows      = rows;
     mByteWidth = width;
 
     mData.resize(mRows * mByteWidth);
@@ -119,76 +132,51 @@ namespace art
 
   inline void Image::copy(const Image& other)
   {
-    mFilename = other.mFilename;
     mFormat = other.mFormat;
     mData.assign(other.mData.begin(), other.mData.end());
     mByteWidth = other.mByteWidth;
-    mRows = other.mRows;
+    mRows      = other.mRows;
     // don't copy the error msg if there is one
   }
 
-  inline auto Image::load() -> bool
+  inline auto Image::load(std::string filename) -> Error<std::string>
   {
-    return load_from_file();
-  }
-
-  inline auto Image::load(std::string filename) -> bool
-  {
-    mFilename = filename;
-    return load();
-  }
-
-  inline auto Image::load_from_file() -> bool
-  {
-    /* Raw Pointers
-     * fImage
-     * temp
-     */
-
-    FIBITMAP* fImage;
-
-    auto filename = mFilename.c_str();
-    mFormat = (ImageFormat)FreeImage_GetFileType(filename);
+    mFormat = static_cast<ImageFormat>(FreeImage_GetFileType(filename.c_str()));
 
     if (mFormat == ImageFormat::Unknown) {
-      mErr = "unknown image type";
-      return false;
+      return std::string("unknown image type");
     }
 
-    fImage = FreeImage_Load((FREE_IMAGE_FORMAT)mFormat, filename);
+    FIBITMAP*     fImage = FreeImage_Load((FREE_IMAGE_FORMAT)mFormat, filename.c_str());
+    ImageUnloader unloader(fImage);
 
-    if (!fImage) {
+    if (fImage == nullptr) {
       std::stringstream ss;
-      ss << "Failed to load image: " << filename;
-      mErr = ss.str();
-      return false;
+      ss << "failed to load image: " << filename;
+      return ss.str();
     }
 
     if (FreeImage_GetBPP(fImage) != 32) {
-      FIBITMAP* temp = fImage;
+      FIBITMAP*     temp = fImage;
+      ImageUnloader temp_unloader(temp);
+
       fImage = FreeImage_ConvertTo32Bits(temp);
 
       if (!fImage) {
-        mErr = "unable to convert to 32 bits per pixel";
-        FreeImage_Unload(temp);
-        return false;
+        return std::string("unable to convert to 32 bits per pixel");
       }
-
-      FreeImage_Unload(temp);
     }
 
     auto bits = FreeImage_GetBits(fImage);
 
     mByteWidth = FreeImage_GetWidth(fImage) * 4;
-    mRows = FreeImage_GetHeight(fImage);
+    mRows      = FreeImage_GetHeight(fImage);
 
     size_t offset = mRows * mByteWidth;
 
     mData.insert(mData.begin(), bits, bits + offset);
 
-    FreeImage_Unload(fImage);
-
-    return true;
+    return Error<std::string>::none();
   }
 
   inline auto Image::data() -> unsigned char*
@@ -221,47 +209,35 @@ namespace art
     return mRows;
   }
 
-  inline auto Image::save() -> bool
-  {
-    return save(mFilename, mFormat);
-  }
-
-  inline auto Image::save(std::string filename) -> bool
+  inline auto Image::save(std::string filename) -> Error<std::string>
   {
     return save(filename, (ImageFormat)FreeImage_GetFileType(filename.c_str()));
   }
 
-  inline auto Image::save(ImageFormat format) -> bool
-  {
-    return save(mFilename, format);
-  }
-
-  inline auto Image::save(std::string filename, ImageFormat format) -> bool  // does not work
+  // TODO does not work
+  inline auto Image::save(std::string filename, ImageFormat format) -> Error<std::string>
   {
     if (format == ImageFormat::Unknown) {
-      mErr = "unknown file type";
-      return false;
+      return std::string("unknown file type");
     }
 
-    unsigned int pixelWidth = img_pixel_length();
-    FIBITMAP* bitmap = FreeImage_Allocate(pixelWidth, mRows, 32);
+    unsigned int  pixelWidth = img_pixel_length();
+    FIBITMAP*     bitmap     = FreeImage_Allocate(pixelWidth, mRows, 32);
+    ImageUnloader unloader(bitmap);
 
-    if (!bitmap) {
-      mErr = "unable to allocate temporary buffer to save";
-      return false;
+    if (bitmap == nullptr) {
+      return std::string("unable to allocate temporary buffer to save");
     }
 
-    const Pixel* pixels = (const Pixel*)mData.data();
+    const Pixel* pixels = reinterpret_cast<const Pixel*>(mData.data());
     for (unsigned long r = 0; r < mRows; r++) {
       for (unsigned long c = 0; c < pixelWidth; c++) {
-        Pixel pix = pixels[r * pixelWidth + c];
+        Pixel   pix  = pixels[r * pixelWidth + c];
         RGBQUAD quad = {pix.r, pix.g, pix.b, pix.a};
         if (!FreeImage_SetPixelColor(bitmap, c, r, &quad)) {
           std::stringstream ss;
           ss << "unable to set pixel color at coord at (" << c << ", " << r << ')';
-          mErr = ss.str();
-          FreeImage_Unload(bitmap);
-          return false;
+          return ss.str();
         }
       }
     }
@@ -269,12 +245,10 @@ namespace art
     auto res = FreeImage_Save((FREE_IMAGE_FORMAT)format, bitmap, filename.c_str());
 
     if (!res) {
-      mErr = "unable to save image";
+      return std::string("unable to save image");
     }
 
-    FreeImage_Unload(bitmap);
-
-    return res;
+    return Error<std::string>::none();
   }
 
   inline void Image::fill(unsigned char color)
@@ -297,12 +271,12 @@ namespace art
 
   inline void Image::write_bytes(Image& other, size_t x, size_t y)
   {
-    auto thisWidth = img_byte_length();
-    auto thisRows = rows();
+    auto thisWidth  = img_byte_length();
+    auto thisRows   = rows();
     auto otherWidth = other.img_byte_length();
-    auto otherRows = other.rows();
+    auto otherRows  = other.rows();
 
-    auto thisData = mData.data();
+    auto thisData  = mData.data();
     auto otherData = other.mData.data();
 
     for (size_t h = 0; h < otherRows; h++) {
@@ -326,12 +300,12 @@ namespace art
 
   void Image::write_pixels(Image& other, size_t x, size_t y)
   {
-    auto thisWidth = img_pixel_length();
-    auto thisRows = rows();
+    auto thisWidth  = img_pixel_length();
+    auto thisRows   = rows();
     auto otherWidth = other.img_pixel_length();
-    auto otherRows = other.rows();
+    auto otherRows  = other.rows();
 
-    auto thisData = (Pixel*)mData.data();
+    auto thisData  = (Pixel*)mData.data();
     auto otherData = (Pixel*)other.mData.data();
 
     for (size_t h = 0; h < otherRows; h++) {
@@ -355,12 +329,12 @@ namespace art
 
   inline void Image::blend(Image& other, size_t x, size_t y)
   {
-    auto thisWidth = img_pixel_length();
-    auto thisRows = rows();
+    auto thisWidth  = img_pixel_length();
+    auto thisRows   = rows();
     auto otherWidth = other.img_pixel_length();
-    auto otherRows = other.rows();
+    auto otherRows  = other.rows();
 
-    auto thisData = (Pixel*)mData.data();
+    auto thisData  = (Pixel*)mData.data();
     auto otherData = (Pixel*)other.mData.data();
 
     for (size_t h = 0; h < otherRows; h++) {
@@ -383,10 +357,5 @@ namespace art
         dp.blend(sp);
       }
     }
-  }
-
-  inline std::string Image::err()
-  {
-    return mErr;
   }
 }  // namespace art
