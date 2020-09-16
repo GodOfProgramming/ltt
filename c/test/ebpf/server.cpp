@@ -1,13 +1,13 @@
 #include <alloca.h>
 #include <arpa/inet.h>
-#include <float.h>
-#include <inttypes.h>
-#include <math.h>
-#include <signal.h>
-#include <stdarg.h>
-#include <time.h>
+#include <cinttypes>
+#include <cmath>
+#include <csignal>
+#include <cstdarg>
+#include <ctime>
 #include <execinfo.h>
 #include <fcntl.h>
+#include <float.h>
 #include <ifaddrs.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
@@ -22,6 +22,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <iostream>
 
 #include <arpa/inet.h>
 #include <assert.h>
@@ -50,6 +51,8 @@
 #include <linux/version.h>
 
 #include <asm-generic/socket.h>
+
+#include "xdp_load.h"
 
 const uint16_t PORT = 12345;
 
@@ -95,12 +98,43 @@ int create_xdp_prog()
 
 int main(int argc, char* argv[])
 {
-  (void)argc;
-  (void)argv;
+  char* dev = nullptr;
+  char* file = nullptr;
+  char* sec = nullptr;
 
-  int prog_fd = create_xdp_prog();
+  int opt;
+  while ((opt = getopt(argc, argv, "d:f:s:")) != -1) {
+    switch (opt) {
+      case 'd': {
+        dev = optarg;
+      } break;
+      case 'f': {
+        file = optarg;
+      } break;
+      case 's': {
+        sec = optarg;
+      } break;
+    }
+  }
 
-  int sock = create_socket(prog_fd);
+  if (dev == nullptr) {
+    std::cout << "must set the -d flag" << std::endl;
+    std::exit(1);
+  }
+
+  if (file == nullptr) {
+    std::cout << "must set the -f flag" << std::endl;
+    std::exit(1);
+  }
+
+  if (sec == nullptr) {
+    std::cout << "must set the -s flag" << std::endl;
+    std::exit(1);
+  }
+
+  auto prog = load_bpf_and_xdp_attach(dev, file, sec);
+
+  int sock = create_socket(prog.prog_fd);
 
   char buff[128];
   bzero(buff, sizeof(buff));

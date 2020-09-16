@@ -1,6 +1,6 @@
 #include "utility/strings.hpp"
 
-#include <cspec.hpp>
+#include <cspec/cspec.hpp>
 
 Eval(Strings)
 {
