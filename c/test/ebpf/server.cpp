@@ -14,16 +14,18 @@
 
 #include <iostream>
 
-#include "xdp_load.h"
+#include "bpf_load.hpp"
 
 const uint16_t PORT = 12345;
+
+using bpf::SocketFilter;
 
 int parts_to_ip(unsigned char a, unsigned char b, unsigned char c, unsigned char d)
 {
   return a << 24 | b << 16 | c << 8 | d;
 }
 
-int create_socket(int prog_fd)
+int create_socket(bpf::SocketFilter& filter)
 {
   int sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP);
 
@@ -31,9 +33,8 @@ int create_socket(int prog_fd)
     error(1, errno, "socket create failed");
   }
 
-  if (prog_fd != 0) {
-    int ret = setsockopt(sock, SOL_SOCKET, SO_ATTACH_BPF, &prog_fd, sizeof(prog_fd));
-    printf("bpf: sock:%d <- fd:%d attached ret:(%d,%s)\n", sock, prog_fd, ret, strerror(errno));
+  if (!filter.attach(sock)) {
+    return -1;
   }
 
   struct sockaddr_in addr = {0};
@@ -51,16 +52,12 @@ int create_socket(int prog_fd)
 
 int main(int argc, char* argv[])
 {
-  char* dev  = nullptr;
   char* file = nullptr;
   char* sec  = nullptr;
 
   int opt;
-  while ((opt = getopt(argc, argv, "d:f:s:")) != -1) {
+  while ((opt = getopt(argc, argv, "f:s:")) != -1) {
     switch (opt) {
-      case 'd': {
-        dev = optarg;
-      } break;
       case 'f': {
         file = optarg;
       } break;
@@ -68,11 +65,6 @@ int main(int argc, char* argv[])
         sec = optarg;
       } break;
     }
-  }
-
-  if (dev == nullptr) {
-    std::cout << "must set the -d flag" << std::endl;
-    std::exit(1);
   }
 
   if (file == nullptr) {
@@ -85,12 +77,22 @@ int main(int argc, char* argv[])
     std::exit(1);
   }
 
-  BPFProgram prog = {};
-  if (!load_bpf_prog(prog, dev, file, sec)) {
+  SocketFilter filter;
+
+  if (!filter.load(file)) {
     std::exit(1);
   }
 
-  int sock = create_socket(prog.prog_fd);
+  if (!filter.select(sec)) {
+    std::exit(1);
+  }
+
+  int sock = create_socket(filter);
+
+  if (sock < 0) {
+    std::cout << "socket creation failed\n";
+    std::exit(1);
+  }
 
   char buff[128];
   bzero(buff, sizeof(buff));

@@ -1,6 +1,8 @@
 #include <iostream>
 #include <unistd.h>
-#include "xdp_load.h"
+#include "bpf_load.hpp"
+
+using bpf::XDPFilter;
 
 int main(int argc, char* argv[])
 {
@@ -38,13 +40,17 @@ int main(int argc, char* argv[])
     std::exit(1);
   }
 
-  BPFProgram prog;
+  XDPFilter filter;
 
-  if (!prog.load(file, sec)) {
+  if (!filter.load(file)) {
     std::exit(1);
   }
 
-  if (!prog.attach_device(dev)) {
+  if (!filter.select(sec)) {
+    std::exit(1);
+  }
+
+  if (!filter.attach(dev)) {
     std::exit(1);
   }
 

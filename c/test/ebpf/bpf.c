@@ -1,23 +1,9 @@
-#include "xdp.h"
+#include "bpf.h"
 
 LICENSE("GPL");
 
-SEC("xdp_drop")
-int drop(struct xdp_md* ctx)
-{
-  (void)ctx;
-  return XDP_DROP;
-}
-
-SEC("xdp_pass")
-int pass(struct xdp_md* ctx)
-{
-  (void)ctx;
-  return XDP_PASS;
-}
-
 SEC("xdp_filter")
-int filter(struct xdp_md* ctx)
+int _xdp_filter(struct xdp_md* ctx)
 {
   struct packet_info info;
 
@@ -38,3 +24,9 @@ int filter(struct xdp_md* ctx)
     return XDP_DROP;
   }
 }
+
+//SEC("sk_filter")
+//int _sk_filter(struct __sk_buff skb)
+//{
+//  return skb.data_end - skb.data;
+//}
