@@ -1,111 +1,186 @@
-#ifndef XDP_LOAD_H
-#define XDP_LOAD_H
+#pragma once
 
 #include <linux/bpf.h>
 #include <bpf/libbpf.h>
+
 #include <error.h>
-#include <stdlib.h>
-#include <stddef.h>
 #include <errno.h>
-#include <unistd.h>
 #include <net/if.h>
 #include <sys/socket.h>
 
 #include <functional>
+#include <iostream>
 
-#define DEFER_JOIN(x, y) x##y
-
-class Defer
+class BPFProgram
 {
  public:
-  inline Defer(std::function<void(void)> f): func(f) {}
-  inline ~Defer()
-  {
-    func();
-  }
+  BPFProgram();
+
+  /**
+   * Unlinks a bpf program if it was globally attached
+   */
+  ~BPFProgram();
+
+  /**
+   * Loads a bpf program for use. Will exit with an error if there's no success
+   *
+   * @param file the object bpf file to use
+   * @param section the section within the object file to load
+   *
+   * @return a bool indicating success or failure
+   */
+  auto load(const char* filename, const char* section) -> bool;
+
+  /**
+   * Attaches the bpf program to a socket
+   *
+   * @param sock_fd the socket to link with
+   *
+   * @return a bool indicating success or failure
+   */
+  auto attach_socket(int sock_fd) -> bool;
+
+  /**
+   * Attaches a bpf program to a network interface for connections
+   *
+   * @param device the device to attach to
+   *
+   * @return a bool indicating success or failure
+   */
+  auto attach_device(const char* device) -> bool;
+
+  /**
+   * Removes the bpf program from the attached interface
+   *
+   * @return a bool indicating success or failure
+   */
+  auto detach() -> bool;
 
  private:
-  std::function<void(void)> func;
+  int mProgFD;
+  int mInterfaceIndex;
+  int mSocket;
+
+  bool mAttachedGlobally;
+
+  struct bpf_object* mBPFObj;
 };
 
-#define defer Defer DEFER_JOIN(defer_, __COUNTER__)
+inline BPFProgram::BPFProgram(): mProgFD(-1), mInterfaceIndex(-1), mSocket(-1), mAttachedGlobally(false), mBPFObj(nullptr) {}
 
-struct BPFProgram
+inline BPFProgram::~BPFProgram()
 {
-  int prog_fd;
-  int interface_index;
-};
+  detach();
+}
 
-/*
- * @param device is the network device to bind to (for example eth0)
- * @param file is the object bpf file to use
- * @param section is the section within the object file to load
- * @return the network interface index that should be reset upon program exit
- *
- * # Example
- *
- * ```c
- * int ifindex = load_bpf_and_xdp_attach("eth0", "xdp_progs.o", "xdp_pass");
- * int err = bpf_set_link_xdp_fd(ifindex, -1, 0);
- * if (err < 0) {
- *   error(1, errno, "could not unlink xdp program");
- * }
- * ```
- */
-inline auto load_bpf_and_xdp_attach(const char* device, const char* filename, const char* section) -> BPFProgram
+inline auto BPFProgram::load(const char* filename, const char* section) -> bool
 {
-  struct bpf_prog_load_attr prog_load_attr;
-  struct bpf_object*        bpf_obj       = nullptr;
-  struct bpf_program*       bpf_prog      = nullptr;
-  int                       first_prog_fd = -1;
-  int                       prog_fd       = -1;
-  int                       err           = 0;
-
-  defer([&] {
-    if (bpf_obj != nullptr) {
-      bpf_object__unload(bpf_obj);
-      bpf_obj = nullptr;
-    }
-  });
-
-  int ifindex = if_nametoindex(device);
-
-  if (ifindex == 0) {
-    error(1, errno, "unknown interface '%s'", device);
-  }
+  bpf_prog_load_attr prog_load_attr;
+  bpf_program*       bpf_prog;
 
   prog_load_attr = {
    .file      = filename,
    .prog_type = BPF_PROG_TYPE_XDP,
   };
 
-  err = bpf_prog_load_xattr(&prog_load_attr, &bpf_obj, &first_prog_fd);
-
+  int first_prog_fd;
+  int err = bpf_prog_load_xattr(&prog_load_attr, &mBPFObj, &first_prog_fd);
   if (err) {
-    error(1, errno, "error loading bpf-obj file '%s' (%d)", filename, err);
+    std::cout << "error loading bpf-obj file '" << filename << "' (" << err << "):" << strerror(errno) << '\n';
+    return false;
   }
 
-  bpf_prog = bpf_object__find_program_by_title(bpf_obj, section);
+  bpf_prog = bpf_object__find_program_by_title(mBPFObj, section);
 
   if (bpf_prog == NULL) {
-    error(1, errno, "err finding section '%s'", section);
+    std::cout << "err finding section '" << section << "': " << strerror(errno) << '\n';
+    return false;
   }
 
-  prog_fd = bpf_program__fd(bpf_prog);
+  int prog_fd = bpf_program__fd(bpf_prog);
 
   if (prog_fd <= 0) {
-    error(1, errno, "err bpf_program__fd failed");
+    std::cout << "err bpf_program__fd failed: " << strerror(errno) << '\n';
+    return false;
   }
 
-  err = bpf_set_link_xdp_fd(ifindex, prog_fd, 0);
-  if (err < 0) {
-    error(1, errno, "link set xdp failed");
-  }
+  mProgFD = prog_fd;
 
-  return BPFProgram{
-   .prog_fd         = prog_fd,
-   .interface_index = ifindex,
-  };
+  return true;
 }
 
-#endif
+auto BPFProgram::attach_socket(int sock_fd) -> bool
+{
+  if (mProgFD < 0) {
+    std::cout << "can't attach to xdp before loading\n";
+    return false;
+  }
+
+  int result = setsockopt(sock_fd, SOL_SOCKET, SO_ATTACH_BPF, &mProgFD, sizeof(mProgFD));
+  if (result < 0) {
+    std::cout << "unable to link bpf to socket: " << strerror(errno) << '\n';
+    return false;
+  }
+
+  mSocket           = sock_fd;
+  mAttachedGlobally = false;
+
+  return true;
+}
+
+auto BPFProgram::attach_device(const char* device) -> bool
+{
+  int ifindex = if_nametoindex(device);
+
+  if (ifindex == 0) {
+    std::cout << "unknown interface '" << device << "': " << strerror(errno) << '\n';
+    return false;
+  }
+
+  mInterfaceIndex = ifindex;
+
+  if (mProgFD < 0) {
+    std::cout << "can't attach to xdp before loading\n";
+    return false;
+  }
+
+  int err = bpf_set_link_xdp_fd(mInterfaceIndex, mProgFD, 0);
+  if (err < 0) {
+    std::cout << "link set xdp failed: " << strerror(errno) << '\n';
+    return false;
+  }
+
+  mAttachedGlobally = true;
+
+  return true;
+}
+
+auto BPFProgram::detach() -> bool
+{
+  if (mBPFObj != nullptr) {
+    bpf_object__unload(mBPFObj);
+    mBPFObj = nullptr;
+  }
+
+  if (mProgFD > 0) {
+    if (mAttachedGlobally) {
+      int err = bpf_set_link_xdp_fd(mInterfaceIndex, -1, 0);
+      if (err < 0) {
+        std::cout << "could not unlink xdp program";
+        return false;
+      }
+    } else {
+      if (mSocket > 0) {
+        int result = setsockopt(mSocket, SOL_SOCKET, SO_DETACH_BPF, &mProgFD, sizeof(mProgFD));
+        if (result < 0) {
+          std::cout << "unable to link bpf to socket: " << strerror(errno) << '\n';
+          return false;
+        }
+        mSocket = -1;
+      }
+    }
+    mProgFD = -1;
+  }
+
+  return true;
+}

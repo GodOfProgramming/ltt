@@ -17,6 +17,7 @@
 #include <linux/tcp.h>
 #include <linux/udp.h>
 #include <linux/version.h>
+#include <linux/types.h>
 
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_endian.h>

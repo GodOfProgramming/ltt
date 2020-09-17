@@ -21,7 +21,7 @@ namespace net
 
   inline bool Address::parse(std::string addr)
   {
-    auto split = utility::StringSplit(addr, R"(:)");
+    auto split = utility::StringSplit(addr, ":");
     std::string address, port;
 
     if (split.size() == 2) {
@@ -50,4 +50,3 @@ namespace net
     return true;
   }
 }  // namespace net
-

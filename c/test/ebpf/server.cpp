@@ -1,56 +1,18 @@
-#include <alloca.h>
-#include <arpa/inet.h>
-#include <cinttypes>
-#include <cmath>
-#include <csignal>
-#include <cstdarg>
-#include <ctime>
-#include <execinfo.h>
-#include <fcntl.h>
-#include <float.h>
-#include <ifaddrs.h>
-#include <linux/netlink.h>
-#include <linux/rtnetlink.h>
-#include <linux/wireless.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <pthread.h>
-#include <sched.h>
-#include <sodium.h>
-#include <strings.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <iostream>
-
-#include <arpa/inet.h>
-#include <assert.h>
-#include <errno.h>
-#include <error.h>
-#include <fcntl.h>
-#include <stddef.h>
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <strings.h>
-#include <unistd.h>
-
-#include <sys/socket.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include <bpf/bpf.h>
-#include <bpf/libbpf.h>
-
 #include <linux/bpf.h>
 #include <linux/if_ether.h>
 #include <linux/if_packet.h>
 #include <linux/unistd.h>
 #include <linux/version.h>
 
+#include <bpf/libbpf.h>
+
 #include <asm-generic/socket.h>
+
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <unistd.h>
+
+#include <iostream>
 
 #include "xdp_load.h"
 
@@ -69,8 +31,10 @@ int create_socket(int prog_fd)
     error(1, errno, "socket create failed");
   }
 
-  int ret = setsockopt(sock, SOL_SOCKET, SO_ATTACH_BPF, &prog_fd, sizeof(prog_fd));
-  printf("bpf: sock:%d <- fd:%d attached ret:(%d,%s)\n", sock, prog_fd, ret, strerror(errno));
+  if (prog_fd != 0) {
+    int ret = setsockopt(sock, SOL_SOCKET, SO_ATTACH_BPF, &prog_fd, sizeof(prog_fd));
+    printf("bpf: sock:%d <- fd:%d attached ret:(%d,%s)\n", sock, prog_fd, ret, strerror(errno));
+  }
 
   struct sockaddr_in addr = {0};
   addr.sin_family         = AF_INET;
@@ -85,22 +49,11 @@ int create_socket(int prog_fd)
   return sock;
 }
 
-int create_xdp_prog()
-{
-  int prog_fd = bpf_obj_get("./xdp_drop.o");
-
-  if (prog_fd < 0) {
-    error(1, errno, "failed to load prog");
-  }
-
-  return prog_fd;
-}
-
 int main(int argc, char* argv[])
 {
-  char* dev = nullptr;
+  char* dev  = nullptr;
   char* file = nullptr;
-  char* sec = nullptr;
+  char* sec  = nullptr;
 
   int opt;
   while ((opt = getopt(argc, argv, "d:f:s:")) != -1) {
@@ -132,17 +85,21 @@ int main(int argc, char* argv[])
     std::exit(1);
   }
 
-  auto prog = load_bpf_and_xdp_attach(dev, file, sec);
+  BPFProgram prog = {};
+  if (!load_bpf_prog(prog, dev, file, sec)) {
+    std::exit(1);
+  }
 
   int sock = create_socket(prog.prog_fd);
 
   char buff[128];
   bzero(buff, sizeof(buff));
+
   struct sockaddr_storage from;
   socklen_t               from_len = (socklen_t)sizeof(from);
+
   while (recvfrom(sock, buff, sizeof(buff) - 1, 0, (struct sockaddr*)&from, &from_len)) {
-    printf("received: %s\n", buff);
-    fflush(stdout);
+    std::cout << "received: " << buff << '\n';
 
     if (strcmp(buff, "quit") == 0) {
       break;
