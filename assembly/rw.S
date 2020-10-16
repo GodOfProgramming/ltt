@@ -1,77 +1,69 @@
 	.section .data
 
-prompt:
-	.asciz "Enter a string: "
+INPUT_LEN: # const size_t
+	.long 	32
 
-display_msg:
-	.asciz  "You said: "
+buff: # char*
+	.long 	0
 
-test_string:
-	.asciz "test string"
+prompt: # const char*
+	.asciz	"Enter a string: "
 
-format:
-	.asciz "%s\n"
-	
+input_fmt: # const char*
+	.asciz	"%s"
+
+display_fmt: # const char*
+	.asciz  "You said: %s\n"
+
 	.section .text
 
 	.global main
 
 main:
-# printf("%s\n", test_string);
+# buff = malloc(INPUT_LEN);
+	push 		%rbx
+	mov			INPUT_LEN(%rip), %rdi
+	call		malloc
+	mov 		%rax, buff(%rip)
+	pop			%rbx
+
+# bzero(buff, INPUT_LEN);
 	push		%rbx
-	lea 		format(%rip), %rdi
-	lea			test_string(%rip), %rsi
-	xor			%rax, %rax
+	mov			buff(%rip), %rdi
+	mov			INPUT_LEN(%rip), %rsi
+	call		bzero
+	pop			%rbx
+
+# printf(prompt);
+	push		%rbx
+	lea 		prompt(%rip), %rdi
+	xor			%rax, %rax										# clear rax so printf expects no vector args
 	call		printf
 	pop			%rbx
+
+# scanf(input_fmt, &buff);
+	push		%rbx
+	lea			input_fmt(%rip), %rdi
+	lea			buff(%rip), %rsi
+	xor			%rax, %rax
+	call		scanf
+	pop			%rbx
+
+# printf(dislay_fmt, buff);
+	push		%rbx
+	lea 		display_fmt(%rip), %rdi
+	lea			buff(%rip), %rsi
+	xor			%rax, %rax										# clear rax so printf expects no vector args
+	call		printf
+	pop			%rbx
+
+# free(buff);
+	push		%rbx
+	lea			buff(%rip), %rdi
+	call		free
+	pop			%rbx
+
+# return 0
+	mov			$0, %rax
 	ret
-
-# char* buff = malloc(32);
-	# mov			$32, %rdi
-	# call		malloc
-	# mov 		%rax, %r8
-
-# size_t output_len = strlen(prompt);
-
-# write(1, prompt, output_len);
-	# mov     $1, %rax      							# 1 is the syscall for write
-	# mov     $1, %rdi      							# 1 is the file descriptor for stdout
-	# mov     $prompt, %rsi  							# move the ptr of hello into rsi register
-	# mov     %r15, %rdx									# output_len
-	# syscall
-	
-# read(0, buff, 31); // 31 = sizeof(buff) - 1
-	# mov			$0, %rax 										# 0 syscall for read
-	# mov			$0, %rdi										# 0 is file desc for stdin
-	# mov			%r8, %rsi										# ptr to buffer
-	# mov			$31, %rdx										# length of buffer - 1
-	# syscall
-
-# output_len = strlen(display_msg);
-	# mov 		$display_msg, %rdi
-	# call		strlen
-	# mov			%rax, %r15
-
-# write(1, display_msg, output_len);
-	# mov     $1, %rax      							# 1 is the syscall for write
-	# mov     $1, %rdi      							# 1 is the file descriptor for stdout
-	# mov     $display_msg, %rsi					# move the ptr of hello into rsi register
-	# mov     %r15, %rdx									# promtp_len
-	# syscall
-
-# write(1, buff, 32);
-	# mov			$1, %rax
-	# mov			$1, %rdi
-	# mov			%r8, %rsi
-	# mov			$32, %rdx
-	# syscall
-
-# putchar('\n');
-	# mov 		$10, %rdi										# '\n' as only arg
-	# call 		putchar
-	
-	# exit(0)
-	mov     $60, %rax
-	xor     %rdi, %rdi    							# zero out rax register
-	syscall
 
