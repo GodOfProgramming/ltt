@@ -6,8 +6,8 @@ module FileSystem
       next if ['.', '..'].include?(fn)
 
       path = "#{dir}/#{fn}"
-      if File.directory?(fn)
-        each_file(path, ext, &blk)
+      if File.directory?(path)
+        traverse(path, ext, &blk)
       else
         next unless File.extname(fn) == ext
 
