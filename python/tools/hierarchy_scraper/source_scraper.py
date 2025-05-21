@@ -1,6 +1,8 @@
-import os
-import CppHeaderParser
 from typing import Callable
+
+import CppHeaderParser
+import os
+import sys
 
 
 def for_each_file(path: str, on_file: Callable[[str], None]):
@@ -21,4 +23,7 @@ def on_file(path: str):
     if "AActor" in parent_names:
       print(f"class {k} inherits from AActor")
 
-for_each_file("src", on_file)
+dirs = sys.argv[1:]
+
+for dir in dirs:
+  for_each_file(dir, on_file)
