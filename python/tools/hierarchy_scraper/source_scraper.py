@@ -4,9 +4,12 @@ import CppHeaderParser
 import os
 import sys
 
+def is_cpp(path: str) -> bool:
+  return path.endswith(".h") or path.endswith(".hpp") or path.endswith(".cpp")
 
 def for_each_file(path: str, on_file: Callable[[str], None]):
   for root, subdirs, files in os.walk(path):
+    files = filter(is_cpp, files)
     for file in files:
       full_file_path = os.path.join(root, file)
       on_file(full_file_path)
@@ -16,12 +19,12 @@ def for_each_file(path: str, on_file: Callable[[str], None]):
 
 def on_file(path: str):
   header = CppHeaderParser.CppHeader(path)
-  for k, v in header.classes.items():
-    cls: CppHeaderParser.CppHeaderParser.CppClass = v
-    parents = cls['inherits']
-    parent_names = set(map(lambda p: p["class"], parents))
-    if "AActor" in parent_names:
-      print(f"class {k} inherits from AActor")
+  for name, untyped_cls in header.classes.items():
+    cls: CppHeaderParser.CppHeaderParser.CppClass = untyped_cls
+    parents = cls["inherits"]
+    parent_names = list(map(lambda p: p["class"], parents))
+    print(",".join([name] + parent_names))
+
 
 dirs = sys.argv[1:]
 
