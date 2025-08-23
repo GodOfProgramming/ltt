@@ -20,7 +20,8 @@ players = format_hash('player', {
 })
 
 npcs = format_hash('npc', {
-  munchi: 'a001a'
+  munchi: 'a001a',
+  bangerz: 'bp001',
 })
 
 monsters = format_hash('monster', {
@@ -141,10 +142,6 @@ if !options.to && options.from
 end
 
 if options.to && options.from
-  if !all.key?(options.to)
-    $stderr.puts("Option --to key #{options.to} does not exist")
-    exit(1)
-  end
 
   if !all.key?(options.from)
     $stderr.puts("Option --from key #{options.from} does not exist")
@@ -152,9 +149,19 @@ if options.to && options.from
   end
 
   from = all[options.from]
-  to = all[options.to]
+  to = nil
+  if options.raw
+    to = options.to
+  else
+    if !all.key?(options.to)
+      $stderr.puts("Option --to key #{options.to} does not exist")
+      exit(1)
+    end
 
-  source = "#{options.source_dir}/#{to}.bch"
+    to = "#{all[options.to]}.bch"
+  end
+
+  source = "#{options.source_dir}/#{to}"
   target = "#{options.target_dir}/#{from}.bch"
 
   FileUtils.copy_file(source, target)
