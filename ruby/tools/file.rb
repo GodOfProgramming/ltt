@@ -7,4 +7,4 @@ end
 
 puts str
 
-puts File.basename(__FILE__)
+puts File.basename(__FILE__, File.extname(__FILE__))
