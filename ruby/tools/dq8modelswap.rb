@@ -17,14 +17,51 @@ players = format_hash('player', {
   medea: 'c006a',
   munchi: 'c007a',
   red: 'c011_1',
+  morrie: 'c012_1',
 })
 
 npcs = format_hash('npc', {
-  munchi: 'a001a',
+  angelo_child: 'dp005',
   bangerz: 'bp001',
+  bard: 'p010a',
+  bard_thorn: 'p010ap',
+  bird_landing_icon: 'taka_f_cursor',
+  blonde_bowlcut_guy: 'p013a',
+  blonde_girl: 'p069a',
+  casino_guy: 'gp001',
+  eagle: 'a003a',
+  elvin_girl: 'op001',
+  emma: 'dp003',
+  ishmahri: 'dp004',
+  kalderasha: 'ap001',
+  king_pavan: 'dp001',
+  lizard: 'a002a',
+  man_in_green_and_purple: 'lp001',
+  man_in_purple: 'p022a',
+  marchello: 'cp001',
+  marchello_child: 'dp006',
+  market_girl: 'p046a',
+  medea_human: 'fp002',
+  merchant: 'dqtoruneko',
+  monsters_fighting: 'ep004',
+  morrie: 'ep003',
+  munchi: 'a001a',
+  muscular_criminal: 'p056a',
+  painting: 's001a',
+  priestess: 'ip001',
+  prince_charmles_of_argonia: 'jp001',
+  queen_sasha: 'dp002',
+  red: 'ep001',
+  templar_guard: 'p040a',
+  thief: 'ep002',
+  trode_human: 'fp001',
+  valentina: 'ap002',
 })
 
 monsters = format_hash('monster', {
+  archdemon_regular: 'm000',
+  archdemon_yellow: 'm001',
+  bullfinch: 'm002',
 })
 
 all = players.merge(npcs).merge(monsters)
@@ -33,7 +70,9 @@ options = OpenStruct.new({
   source_dir: ENV['DQ8_SOURCE_DIR'],
   target_dir: ENV['DQ8_TARGET_DIR'],
   from: nil,
+  from_variant: nil,
   to: nil,
+  to_variant: nil,
   raw: false,
   clear: nil,
 })
@@ -51,8 +90,16 @@ parser = OptionParser.new() do |opts|
     options.from = v
   end
 
+  opts.on('--from-variant <VARIANT>', 'Supply a modifier to the from value') do |v|
+    options.from_variant = v
+  end
+
   opts.on('-t', '--to <TO>', 'The model to swap to') do |v|
     options.to = v
+  end
+
+  opts.on('--to-variant <VARIANT>', 'Supply a modifier to the to value') do |v|
+    options.to_variant = v
   end
 
   opts.on('-r', '--raw', 'Use a raw file to replace with') do |_|
@@ -80,7 +127,7 @@ parser = OptionParser.new() do |opts|
   end
 
   opts.on('--list-options', 'List all available options') do |_|
-    puts("--source --target -f --from -t --to --raw")
+    puts("--source --target -f --from --from-variant -t --to --to-variant --raw -c --clear")
     exit(0)
   end
 
@@ -142,15 +189,24 @@ if !options.to && options.from
 end
 
 if options.to && options.from
-
   if !all.key?(options.from)
     $stderr.puts("Option --from key #{options.from} does not exist")
     exit(1)
   end
 
   from = all[options.from]
+
+  if options.from_variant
+    from = from.sub(/_\d+/, "_#{options.to_variant}")
+  end
+
   to = nil
   if options.raw
+    if options.to_variant
+      $stderr.puts("Option --to-variant not allowed with --raw flag")
+      exit(1)
+    end
+
     to = options.to
   else
     if !all.key?(options.to)
@@ -159,14 +215,16 @@ if options.to && options.from
     end
 
     to = "#{all[options.to]}.bch"
+
+    if options.to_variant
+      to = to.sub(/_\d+/, "_#{options.to_variant}")
+    end
   end
 
   source = "#{options.source_dir}/#{to}"
   target = "#{options.target_dir}/#{from}.bch"
 
   FileUtils.copy_file(source, target)
-
-  exit(0)
 end
 
 if options.clear
@@ -179,6 +237,4 @@ if options.clear
   clear_file = "#{options.target_dir}/#{clear}.bch"
 
   FileUtils.remove_file(clear_file)
-
-  exit(0)
 end
