@@ -3,133 +3,25 @@
 require 'optparse'
 require 'ostruct'
 require 'fileutils'
+require 'yaml'
 
 def format_hash(prefix, hash)
   hash.map { |k, v| [ "#{prefix}/#{k}", "#{prefix}/#{v}" ] }.to_h
 end
 
-players = format_hash('player', {
-  hero: 'c001_1',
-  yangus: 'c002_1',
-  jessica: 'c004_1',
-  angelo: 'c003_1',
-  trode: 'c005a',
-  medea: 'c006a',
-  munchi: 'c007a',
-  red: 'c011_1',
-  morrie: 'c012_1',
-})
+def load_models()
+  data = YAML.load(File.read("#{__dir__}/dq8models.yaml"))
 
-npcs = format_hash('npc', {
-  angelo_child: 'dp005',
-  bangerz: 'bp001',
-  bard: 'p010a',
-  bard_thorn: 'p010ap',
-  bartender: 'p021a',
-  bird_landing_icon: 'taka_f_cursor',
-  blacksmith: 'p012a',
-  blonde_bowlcut_guy: 'p013a',
-  boy: 'p018a',
-  boy_monk: 'p016a',
-  boy_teenager: 'p019a',
-  boy_tux_blue_hair: 'x002',
-  boy_tux_brown_hair: 'x003',
-  eagle: 'a003a',
-  emma: 'dp003',
-  girl_blonde: 'p069a',
-  girl_blonde_pigtails: 'p051a',
-  girl_elvin: 'op001',
-  girl_maid: 'p020a',
-  girl_market: 'p046a',
-  girl_scholar_mourning: 'p045a',
-  guard_red: 'p014a',
-  guard_templar: 'p040a',
-  guy_casino: 'gp001',
-  hero_child: 'x001',
-  invisible: 'rg01',
-  ishmahri: 'dp004',
-  jessica_wedding: 'x006',
-  kalderasha: 'ap001',
-  king_pavan: 'dp001',
-  lady_old: 'p011a',
-  lady_old_happy: 'p027a',
-  lizard: 'a002a',
-  lord_high_priest: 'pp002',
-  man_beggar: 'p050a',
-  man_bishop: 'p038a',
-  man_chef: 'p053a',
-  man_dealer: 'p036a',
-  man_farmer: 'p049a',
-  man_guard: 'p048a',
-  man_jailer_guard: 'p056a',
-  man_merc_elf: 'p057a',
-  man_merc_pink: 'p055a',
-  man_merchant_small: 'p043a',
-  man_monk: 'p029a',
-  man_monk_old: 'p030a',
-  man_noble: 'p028a',
-  man_old: 'p033a',
-  man_pirate: 'p025a',
-  man_purple: 'p022a',
-  man_purple_and_green: 'lp001',
-  man_scholar: 'p031a',
-  man_scholar_mourning: 'p044a',
-  man_templar: 'p032a',
-  man_templar_big_lips: 'p041a',
-  man_templar_older1: 'p075a',
-  man_templar_older2: 'p040a',
-  man_templar_older3: 'p042a',
-  man_warrior: 'p035a',
-  marcello: 'cp001',
-  marcello_child: 'dp006',
-  marcello_lord_high_priest: 'pp001',
-  marcello_possessed: 'pp001b',
-  medea_child: 'x004',
-  medea_human: 'fp002',
-  medea_wedding_1: 'rp001',
-  medea_wedding_2: 'x005',
-  merchant: 'dqtoruneko',
-  monsters_fighting: 'ep004',
-  morrie: 'ep003',
-  munchi: 'a001a',
-  muscular_criminal: 'p056a',
-  nun: 'p039a',
-  painting: 's001a',
-  priest: 'p034a',
-  priestess: 'ip001',
-  prince_charmles: 'jp001',
-  queen_sasha: 'dp002',
-  red: 'ep001',
-  sabercat_black: 'x008',
-  sabercat_white: 'x007',
-  salesman_herb: 'p023a',
-  swordsman_blue: 'p017a',
-  swordsman_green: 'p015a',
-  thief: 'ep002',
-  thief_man: 'p026a',
-  trode_human: 'fp001',
-  valentina: 'ap002',
-  woman_bunny_black_blue: 'p024a_iro2',
-  woman_bunny_black_green: 'p024a',
-  woman_bunny_black_pink: 'p024a_iro',
-  woman_bunny_black_yellow: 'p024a_iro3',
-  woman_fortune_teller: 'p037a',
-  woman_housewife: 'p052a',
-  woman_merc: 'p047a',
-  woman_merchant: 'p046a',
-  woman_noble: 'p054a',
-})
+  models = {}
 
-monsters = format_hash('monster', {
-  archdemon_regular: 'm000',
-  archdemon_yellow: 'm001',
-  bullfinch: 'm002',
-  purple_eye: 'm123',
-  killing_machine: 'm100',
-  stone_golem: 'm030',
-})
+  for prefix, model_map in data
+    models.merge!(format_hash(prefix, model_map))
+  end
 
-all = players.merge(npcs).merge(monsters)
+  models
+end
+
+all = load_models()
 
 options = OpenStruct.new({
   source_dir: ENV['DQ8_SOURCE_DIR'],
