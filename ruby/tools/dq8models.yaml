@@ -1,14 +1,16 @@
 ---
 player:
   hero: "c001_1"
+  hero_psychup: "c001_h1"
   yangus: "c002_1"
   jessica: "c004_1"
   angelo: "c003_1"
   trode: "c005a"
-  medea: "c006a"
+  medea_horse: "c006a"
   munchi: "c007a"
   red: "c011_1"
   morrie: "c012_1"
+  ship: "ship"
 
 npc:
   # named
